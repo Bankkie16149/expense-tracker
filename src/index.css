@@ -65,35 +65,79 @@
 }
 
 body.dark-mode {
-    /* Primary Palette */
-    --primary-dark: #0f172a;
-    --primary-main: #3b82f6;
-    --primary-light: #60a5fa;
-    --accent: #38bdf8;
+    /* Primary Palette - Refined */
+    --primary-dark: #0B1121; /* Very deep navy/slate for backgrounds */
+    --primary-main: #3B82F6; /* Bright vibrant blue */
+    --primary-light: #60A5FA;
+    --accent: #0EA5E9; /* Cyan-ish accent */
     
-    /* Semantic Colors */
-    --success: #10b981;
-    --danger: #ef4444;
-    --warning: #f59e0b;
-    --income: #10b981;
-    --expense: #ef4444;
+    /* Semantic Colors - High Contrast */
+    --success: #10B981; /* Emerald */
+    --danger: #F43F5E; /* Rose */
+    --warning: #F59E0B;
+    --income: #10B981;
+    --expense: #F43F5E;
     
-    /* Neutral Palette (Slate/Navy Tone) */
-    --bg-body: #020617;
-    --bg-card: rgba(15, 23, 42, 0.75);
-    --text-main: #f8fafc;
-    --text-muted: #94a3b8;
-    --border: rgba(51, 65, 85, 0.5);
-    --bg-hover: rgba(30, 41, 59, 0.8);
-    --bg-hover-danger: rgba(69, 10, 10, 0.6);
+    /* Neutral Palette - Deep Space Theme */
+    --bg-body: #0B1121;
+    --bg-card: #1E293B; /* Slate-800 for cards, better than rgba for performance/contrast */
+    --text-main: #F8FAFC; /* Slate-50 */
+    --text-muted: #94A3B8; /* Slate-400 */
+    --border: #334155; /* Slate-700 */
+    --bg-hover: #334155;
+    --bg-hover-danger: rgba(244, 63, 94, 0.15);
     
     /* Shadows & Glass */
-    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.5);
+    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.4);
     --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.5), 0 2px 4px -2px rgba(0, 0, 0, 0.5);
     --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.7), 0 4px 6px -4px rgba(0, 0, 0, 0.7);
-    --glass: rgba(15, 23, 42, 0.65);
-    --glass-border: rgba(255, 255, 255, 0.05);
+    --glass: rgba(30, 41, 59, 0.75);
+    --glass-border: rgba(255, 255, 255, 0.1);
 }
+
+/* --- Dark Mode Overrides for Hardcoded Components --- */
+body.dark-mode .admin-summary-card { background: var(--bg-card); border-color: var(--border); }
+body.dark-mode .dropdown-header { background: var(--bg-body); border-bottom-color: var(--border); }
+
+/* SweetAlert2 Dark Mode */
+body.dark-mode .swal2-popup { background: var(--bg-card) !important; }
+body.dark-mode .swal2-title { color: var(--text-main) !important; }
+body.dark-mode .swal2-html-container { color: var(--text-muted) !important; }
+body.dark-mode .swal2-input, 
+body.dark-mode .swal2-select, 
+body.dark-mode .swal2-textarea { 
+    background-color: var(--bg-body) !important; 
+    color: var(--text-main) !important; 
+    border-color: var(--border) !important; 
+}
+body.dark-mode .swal2-input:focus, 
+body.dark-mode .swal2-select:focus, 
+body.dark-mode .swal2-textarea:focus { 
+    background-color: var(--bg-card) !important; 
+    border-color: var(--primary-main) !important; 
+}
+body.dark-mode .swal2-cancel, 
+body.dark-mode .swal2-deny { 
+    background-color: var(--bg-body) !important; 
+    color: var(--text-main) !important; 
+    border-color: var(--border) !important; 
+}
+body.dark-mode .swal2-cancel:hover, 
+body.dark-mode .swal2-deny:hover { 
+    background-color: var(--bg-hover) !important; 
+}
+
+/* Chat & Special Cards Dark Mode */
+body.dark-mode .admin-chat-wrapper { background-color: var(--bg-card); }
+body.dark-mode .admin-chat-sidebar { background-color: var(--bg-body); border-right-color: var(--border); }
+body.dark-mode .admin-chat-main { background-color: var(--bg-card); }
+body.dark-mode .ai-insights { background: linear-gradient(145deg, #1E293B, #0F172A); border: 1px solid var(--border); }
+body.dark-mode .forecast-banner { background: rgba(15, 23, 42, 0.6); border: 1px solid var(--border); }
+body.dark-mode .savings-badge { background: rgba(16, 185, 129, 0.15); color: var(--success); }
+body.dark-mode .insight-card-item { background: rgba(15, 23, 42, 0.4); border-color: transparent; }
+body.dark-mode .insight-card-item:hover { background: rgba(15, 23, 42, 0.6); border-color: var(--border); }
+body.dark-mode .forecast-btn { background: var(--bg-body); color: var(--text-main); border: 1px solid var(--border); }
+body.dark-mode .forecast-btn:hover { background: var(--bg-hover); box-shadow: none; }
 
 * {
     margin: 0;

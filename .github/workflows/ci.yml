@@ -1,0 +1,35 @@
+name: CI Pipeline (Check Code Quality)
+
+on:
+  push:
+    branches: [ "main", "master" ]
+  pull_request:
+    branches: [ "main", "master" ]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: ⚙️ Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      # Check Backend
+      - name: 📦 Install Backend Dependencies
+        working-directory: ./backend
+        run: npm install
+
+      - name: 🗄️ Generate Prisma Client
+        working-directory: ./backend
+        run: npx prisma generate
+
+      # Check Frontend
+      - name: 📦 Install Frontend Dependencies
+        run: npm install
+
+      - name: 🏗️ Build Frontend (Check for build errors)
+        run: npm run build

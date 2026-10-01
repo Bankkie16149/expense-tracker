@@ -13,4 +13,9 @@ router.get('/pro-requests', adminController.getProRequests);
 router.post('/pro-requests/:id/approve', adminController.approveProRequest);
 router.post('/pro-requests/:id/reject', adminController.rejectProRequest);
 
+
+router.put('/transactions/:id', adminController.updateUserTransaction);
+router.delete('/transactions/:id', adminController.deleteUserTransaction);
+
 module.exports = router;
+  

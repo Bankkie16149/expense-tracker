@@ -1,54 +1,149 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { fetchWithAuth } from '../utils/api';
-import { useLanguage } from '../contexts/LanguageContext';
-import { ArrowLeft, TrendingUp, TrendingDown, Clock } from 'lucide-react';
 import Layout from '../components/Layout';
+import { useLanguage } from '../contexts/LanguageContext';
+import { ArrowLeft, Edit2, Trash2 } from 'lucide-react';
 import Swal from 'sweetalert2';
+
+const API_BASE_URL = import.meta.env.VITE_API_URL || '';
 
 const AdminUserTransactions = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { language } = useLanguage();
-  const [data, setData] = useState({ user: null, balance: 0, transactions: [] });
-  const [loading, setLoading] = useState(true);
+  
+  const [data, setData] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [filterMonth, setFilterMonth] = useState('all');
   const [filterYear, setFilterYear] = useState(new Date().getFullYear().toString());
 
-  const getMonthName = (monthIndex) => {
-    const date = new Date(2024, monthIndex, 1);
-    return date.toLocaleString(language === 'th' ? 'th-TH' : 'en-US', { month: 'long' });
+  const fetchUserData = async () => {
+    try {
+      setIsLoading(true);
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${API_BASE_URL}/api/admin/users/${id}/transactions`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch user data');
+      }
+
+      const jsonData = await response.json();
+      setData(jsonData);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   useEffect(() => {
-    const user = JSON.parse(localStorage.getItem('user') || '{}');
-    if (user.email !== 'tanakorn.tip@student.mahidol.edu') {
-      navigate('/');
-      return;
-    }
-    loadData();
-  }, [id, navigate]);
+    fetchUserData();
+  }, [id]);
 
-  const loadData = async () => {
-    try {
-      setLoading(true);
-      const res = await fetchWithAuth(`/api/admin/users/${id}/transactions`);
-      if (!res.ok) throw new Error('Failed to load user transactions');
-      const data = await res.json();
-      setData(data);
-    } catch (error) {
-      console.error(error);
-      Swal.fire('Error', 'Failed to load user transactions', 'error');
-      navigate('/admin');
-    } finally {
-      setLoading(false);
+  const getMonthName = (monthIndex) => {
+    const date = new Date(2000, monthIndex, 1);
+    return date.toLocaleDateString(language === 'th' ? 'th-TH' : 'en-US', { month: 'long' });
+  };
+
+  const handleEdit = async (tx) => {
+    const { value: formValues } = await Swal.fire({
+      title: language === 'th' ? 'แก้ไขรายการ' : 'Edit Transaction',
+      html: `
+        <input id="swal-title" class="swal2-input" placeholder="Title" value="${tx.title}">
+        <input id="swal-amount" type="number" class="swal2-input" placeholder="Amount" value="${tx.amount}">
+        <input id="swal-date" type="date" class="swal2-input" value="${new Date(tx.date).toISOString().split('T')[0]}">
+      `,
+      focusConfirm: false,
+      showCancelButton: true,
+      preConfirm: () => {
+        return {
+          title: document.getElementById('swal-title').value,
+          amount: document.getElementById('swal-amount').value,
+          date: document.getElementById('swal-date').value
+        }
+      }
+    });
+
+    if (formValues) {
+      try {
+        const token = localStorage.getItem('token');
+        const response = await fetch(`${API_BASE_URL}/api/admin/transactions/${tx.id}`, {
+          method: 'PUT',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            title: formValues.title,
+            amount: formValues.amount,
+            date: formValues.date
+          })
+        });
+
+        if (!response.ok) throw new Error('Update failed');
+        Swal.fire('Success', language === 'th' ? 'แก้ไขสำเร็จ' : 'Updated successfully', 'success');
+        fetchUserData();
+      } catch (err) {
+        Swal.fire('Error', err.message, 'error');
+      }
     }
   };
 
-  if (loading) {
+  const handleDelete = async (txId) => {
+    const result = await Swal.fire({
+      title: language === 'th' ? 'ยืนยันการลบ?' : 'Are you sure?',
+      text: language === 'th' ? 'ไม่สามารถกู้คืนได้' : "You won't be able to revert this!",
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#d33',
+      cancelButtonColor: '#3085d6',
+      confirmButtonText: language === 'th' ? 'ลบเลย' : 'Yes, delete it!'
+    });
+
+    if (result.isConfirmed) {
+      try {
+        const token = localStorage.getItem('token');
+        const response = await fetch(`${API_BASE_URL}/api/admin/transactions/${txId}`, {
+          method: 'DELETE',
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+
+        if (!response.ok) throw new Error('Delete failed');
+        Swal.fire('Deleted!', language === 'th' ? 'ลบรายการสำเร็จ' : 'Transaction deleted.', 'success');
+        fetchUserData();
+      } catch (err) {
+        Swal.fire('Error', err.message, 'error');
+      }
+    }
+  };
+
+  if (isLoading) {
     return (
       <Layout>
-        <div style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)' }}>Loading...</div>
+        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '50vh' }}>
+          <div className="loading-spinner"></div>
+        </div>
+      </Layout>
+    );
+  }
+
+  if (error) {
+    return (
+      <Layout>
+        <div className="card" style={{ textAlign: 'center', color: 'var(--danger)', padding: '3rem' }}>
+          <h3>Error</h3>
+          <p>{error}</p>
+          <button className="btn mt-4" onClick={() => navigate('/admin')}>
+            Back to Dashboard
+          </button>
+        </div>
       </Layout>
     );
   }
@@ -120,7 +215,6 @@ const AdminUserTransactions = () => {
           </div>
         </div>
 
-
         {filteredTransactions.length === 0 ? (
           <p style={{ color: 'var(--text-muted)', textAlign: 'center', padding: '2rem' }}>
             {language === 'th' ? 'ไม่มีรายการธุรกรรม' : 'No transactions found'}
@@ -134,6 +228,7 @@ const AdminUserTransactions = () => {
                   <th style={{ padding: '12px 16px', color: 'var(--text-muted)', fontWeight: 500 }}>Title</th>
                   <th style={{ padding: '12px 16px', color: 'var(--text-muted)', fontWeight: 500 }}>Category</th>
                   <th style={{ padding: '12px 16px', color: 'var(--text-muted)', fontWeight: 500, textAlign: 'right' }}>Amount</th>
+                  <th style={{ padding: '12px 16px', color: 'var(--text-muted)', fontWeight: 500, textAlign: 'center' }}>Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -151,6 +246,14 @@ const AdminUserTransactions = () => {
                     </td>
                     <td style={{ padding: '16px', textAlign: 'right', fontWeight: 'bold', color: tx.category.type === 'income' ? 'var(--income)' : 'var(--expense)' }}>
                       {tx.category.type === 'income' ? '+' : '-'}฿{tx.amount.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                    </td>
+                    <td style={{ padding: '16px', textAlign: 'center' }}>
+                      <button onClick={() => handleEdit(tx)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--primary-main)', marginRight: '10px' }} title="Edit">
+                        <Edit2 size={18} />
+                      </button>
+                      <button onClick={() => handleDelete(tx.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--danger)' }} title="Delete">
+                        <Trash2 size={18} />
+                      </button>
                     </td>
                   </tr>
                 ))}

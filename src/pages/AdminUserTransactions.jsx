@@ -54,9 +54,26 @@ const AdminUserTransactions = () => {
     const { value: formValues } = await Swal.fire({
       title: language === 'th' ? 'แก้ไขรายการ' : 'Edit Transaction',
       html: `
-        <input id="swal-title" class="swal2-input" placeholder="Title" value="${tx.title}">
-        <input id="swal-amount" type="number" class="swal2-input" placeholder="Amount" value="${tx.amount}">
-        <input id="swal-date" type="date" class="swal2-input" value="${new Date(tx.date).toISOString().split('T')[0]}">
+        <div style="display: flex; flex-direction: column; gap: 15px; text-align: left; padding: 10px 0; overflow-x: hidden;">
+          <div>
+            <label style="font-size: 14px; font-weight: bold; color: #555; margin-bottom: 5px; display: block;">
+              ${language === 'th' ? 'ชื่อรายการ' : 'Title'}
+            </label>
+            <input id="swal-title" class="swal2-input" style="margin: 0; width: 100%; box-sizing: border-box;" value="${tx.title}">
+          </div>
+          <div>
+            <label style="font-size: 14px; font-weight: bold; color: #555; margin-bottom: 5px; display: block;">
+              ${language === 'th' ? 'จำนวนเงิน' : 'Amount'}
+            </label>
+            <input id="swal-amount" type="number" class="swal2-input" style="margin: 0; width: 100%; box-sizing: border-box;" value="${tx.amount}">
+          </div>
+          <div>
+            <label style="font-size: 14px; font-weight: bold; color: #555; margin-bottom: 5px; display: block;">
+              ${language === 'th' ? 'วันที่' : 'Date'}
+            </label>
+            <input id="swal-date" type="date" class="swal2-input" style="margin: 0; width: 100%; box-sizing: border-box;" value="${new Date(tx.date).toISOString().split('T')[0]}">
+          </div>
+        </div>
       `,
       focusConfirm: false,
       showCancelButton: true,

@@ -43,8 +43,12 @@ const Savings = () => {
     const { value: formValues } = await Swal.fire({
       title: language === 'th' ? 'สร้างเป้าหมายการออม' : 'Create Savings Goal',
       html:
-        `<input id="swal-input1" class="swal2-input" placeholder="${language === 'th' ? 'ชื่อเป้าหมาย' : 'Goal Name'}">` +
-        `<input id="swal-input2" class="swal2-input" type="text" placeholder="${language === 'th' ? 'จำนวนเงินเป้าหมาย' : 'Target Amount'}">`,
+        '<div style="display: flex; flex-direction: column; gap: 15px; text-align: left; padding: 10px 0; overflow-x: hidden;">' +
+        '<div><label style="font-size: 14px; font-weight: bold; color: #555; margin-bottom: 5px; display: block;">' + (language === 'th' ? 'ชื่อเป้าหมาย' : 'Goal Name') + '</label>' +
+        '<input id="swal-input1" class="swal2-input" placeholder="' + (language === 'th' ? 'ชื่อเป้าหมาย' : 'Goal Name') + '" style="margin: 0; width: 100%; box-sizing: border-box;"></div>' +
+        '<div><label style="font-size: 14px; font-weight: bold; color: #555; margin-bottom: 5px; display: block;">' + (language === 'th' ? 'จำนวนเงินเป้าหมาย' : 'Target Amount') + '</label>' +
+        '<input id="swal-input2" class="swal2-input" type="number" placeholder="' + (language === 'th' ? 'จำนวนเงินเป้าหมาย' : 'Target Amount') + '" style="margin: 0; width: 100%; box-sizing: border-box;"></div>' +
+        '</div>',
       focusConfirm: false,
       preConfirm: () => {
         const name = document.getElementById('swal-input1').value;
@@ -113,8 +117,12 @@ const Savings = () => {
     const { value: formValues } = await Swal.fire({
       title: language === 'th' ? 'แก้ไขเป้าหมาย' : 'Edit Goal',
       html:
-        `<input id="swal-edit1" class="swal2-input" value="${goal.name}" placeholder="${language === 'th' ? 'ชื่อเป้าหมาย' : 'Goal Name'}" style="max-width: 100%; box-sizing: border-box; width: calc(100% - 2rem);">` +
-        `<input id="swal-edit2" class="swal2-input" type="number" value="${goal.targetAmount}" placeholder="${language === 'th' ? 'จำนวนเงินเป้าหมาย' : 'Target Amount'}" style="max-width: 100%; box-sizing: border-box; width: calc(100% - 2rem);">`,
+        '<div style="display: flex; flex-direction: column; gap: 15px; text-align: left; padding: 10px 0; overflow-x: hidden;">' +
+        '<div><label style="font-size: 14px; font-weight: bold; color: #555; margin-bottom: 5px; display: block;">' + (language === 'th' ? 'ชื่อเป้าหมาย' : 'Goal Name') + '</label>' +
+        '<input id="swal-edit1" class="swal2-input" value="' + goal.name + '" style="margin: 0; width: 100%; box-sizing: border-box;"></div>' +
+        '<div><label style="font-size: 14px; font-weight: bold; color: #555; margin-bottom: 5px; display: block;">' + (language === 'th' ? 'จำนวนเงินเป้าหมาย' : 'Target Amount') + '</label>' +
+        '<input id="swal-edit2" class="swal2-input" type="number" value="' + goal.targetAmount + '" style="margin: 0; width: 100%; box-sizing: border-box;"></div>' +
+        '</div>',
       focusConfirm: false,
       showCancelButton: true,
       preConfirm: () => {

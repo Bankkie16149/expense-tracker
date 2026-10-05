@@ -68,6 +68,33 @@ app.use('/api/admin', authenticate, adminMiddleware, adminRoutes);
 app.use('/api/ads', adRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/chat', authenticate, chatRoutes);
+
+app.get('/', (req, res) => {
+  res.send(`
+    <html>
+      <head>
+        <title>FinTrack API Status</title>
+        <style>
+          body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; background-color: #f8fafc; color: #334155; }
+          .container { text-align: center; padding: 3rem; background: white; border-radius: 16px; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1); border: 1px solid #e2e8f0; }
+          h1 { color: #0f172a; margin-top: 0; margin-bottom: 0.5rem; font-size: 1.8rem; }
+          p { margin-bottom: 1.5rem; color: #64748b; }
+          .status { display: inline-flex; align-items: center; gap: 0.5rem; background: #dcfce7; color: #166534; padding: 0.35rem 1rem; border-radius: 9999px; font-weight: 600; font-size: 0.875rem; letter-spacing: 0.025em; }
+          .dot { width: 10px; height: 10px; background: #22c55e; border-radius: 50%; box-shadow: 0 0 0 3px #bbf7d0; animation: pulse 2s infinite; }
+          @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.4); } 70% { box-shadow: 0 0 0 6px rgba(34, 197, 94, 0); } 100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); } }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <h1>FinTrack API</h1>
+          <p>The backend service is up and running.</p>
+          <div class="status"><div class="dot"></div> System Online</div>
+        </div>
+      </body>
+    </html>
+  `);
+});
+
 // Global Error Handler Middleware
 app.use((err, req, res, next) => {
   const statusCode = res.statusCode !== 200 ? res.statusCode : 500;

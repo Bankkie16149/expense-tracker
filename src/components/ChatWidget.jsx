@@ -35,7 +35,7 @@ const ChatWidget = () => {
 
   // We only show the widget for non-admin logged-in users
   // (Admins will have a separate dashboard for chat)
-  const isAdmin = user?.email === 'tanakorn.tip@student.mahidol.edu';
+  const isAdmin = Boolean(user?.isAdmin);
   const shouldRender = user && !isAdmin;
 
   useEffect(() => {

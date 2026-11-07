@@ -18,7 +18,7 @@ const AdminDashboard = () => {
   // Redirect if not admin
   useEffect(() => {
     const user = JSON.parse(localStorage.getItem('user') || '{}');
-    if (user.email !== 'tanakorn.tip@student.mahidol.edu') {
+    if (!user?.isAdmin) {
       navigate('/');
     } else {
       if (activeTab === 'users') loadUsers();
@@ -390,7 +390,7 @@ const AdminDashboard = () => {
                         >
                           <Edit size={18} />
                         </button>
-                        {u.email !== 'tanakorn.tip@student.mahidol.edu' && (
+                        {!u.isAdmin && (
                           <button 
                             onClick={() => handleDeleteUser(u.id, u.name || u.email)}
                             style={{ background: 'var(--bg-hover-danger)', color: 'var(--danger)', border: 'none', padding: '6px', borderRadius: '6px', cursor: 'pointer' }}

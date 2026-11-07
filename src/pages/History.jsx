@@ -206,9 +206,10 @@ const History = () => {
         doc.setFontSize(10);
         doc.setTextColor(100, 100, 100);
         
+        const supportContact = import.meta.env.VITE_SUPPORT_EMAIL ? ` (${import.meta.env.VITE_SUPPORT_EMAIL})` : '';
         const footerText = exportLang === 'th' 
-          ? "ขอบคุณที่ใช้บริการของเรา หากมีข้อสงสัยสามารถติดต่อได้ที่ hoing11111@gmail.com" 
-          : "Thank you for using our service. For any inquiries, please contact hoing11111@gmail.com";
+          ? `ขอบคุณที่ใช้บริการ FinTrack${supportContact}`
+          : `Thank you for using FinTrack${supportContact}`;
         const textWidth = doc.getTextWidth(footerText);
         doc.text(footerText, (pageWidth - textWidth) / 2, pageHeight - 15);
         

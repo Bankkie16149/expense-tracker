@@ -21,7 +21,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
   
   const user = JSON.parse(localStorage.getItem('user') || '{}');
   const isPro = user?.isPro || false;
-  const isAdmin = user?.email === 'tanakorn.tip@student.mahidol.edu';
+  const isAdmin = Boolean(user?.isAdmin);
   
   const [customApp, setCustomApp] = React.useState(null);
 

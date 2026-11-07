@@ -35,11 +35,13 @@ exports.getUsers = async (req, res) => {
         }
       });
       
+      const adminEmail = process.env.ADMIN_EMAIL;
       return {
         id: user.id,
         email: user.email,
         name: user.name,
         isPro: user.isPro,
+        isAdmin: Boolean(adminEmail && user.email === adminEmail),
         createdAt: user.createdAt,
         themeColor: user.themeColor,
         customLogoUrl: user.customLogoUrl,

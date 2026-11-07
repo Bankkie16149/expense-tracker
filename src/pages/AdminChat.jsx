@@ -20,7 +20,7 @@ const AdminChat = () => {
   const admin = JSON.parse(localStorage.getItem('user') || '{}');
 
   useEffect(() => {
-    if (admin.email !== 'tanakorn.tip@student.mahidol.edu') {
+    if (!admin?.isAdmin) {
       navigate('/');
       return;
     }

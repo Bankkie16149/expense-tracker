@@ -17,7 +17,7 @@ const Layout = ({ children, searchQuery, setSearchQuery, showSearch = false }) =
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
   
-  const isAdmin = user?.email === 'tanakorn.tip@student.mahidol.edu';
+  const isAdmin = Boolean(user?.isAdmin);
   const [notifications, setNotifications] = useState([]);
   const notifRef = useRef(null);
   const profileRef = useRef(null);

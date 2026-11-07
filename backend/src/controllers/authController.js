@@ -4,6 +4,29 @@ const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 const nodemailer = require('nodemailer');
 const emailService = require('../services/emailService');
+
+const getAdminEmail = () => process.env.ADMIN_EMAIL;
+
+const formatUser = (u) => {
+  if (!u) return null;
+  const adminEmail = getAdminEmail();
+  return {
+    id: u.id,
+    email: u.email,
+    name: u.name,
+    isPro: u.isPro,
+    isAdmin: Boolean(adminEmail && u.email === adminEmail),
+    profilePic: u.profilePic,
+    hasSetPrefs: u.hasSetPrefs,
+    notifyEmail: u.notifyEmail,
+    notifyInApp: u.notifyInApp,
+    themeColor: u.themeColor,
+    customLogoUrl: u.customLogoUrl,
+    customAppName: u.customAppName,
+    proStatus: u.proStatus,
+  };
+};
+
 const authController = {
   async register(req, res, next) {
     try {
@@ -24,7 +47,7 @@ const authController = {
       });
 
       const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET, { expiresIn: '7d' });
-      res.status(201).json({ token, user: { id: user.id, email: user.email, name: user.name, isPro: user.isPro, profilePic: user.profilePic, hasSetPrefs: user.hasSetPrefs, notifyEmail: user.notifyEmail, themeColor: user.themeColor, customLogoUrl: user.customLogoUrl } });
+      res.status(201).json({ token, user: formatUser(user) });
     } catch (error) {
       next(error);
     }
@@ -45,7 +68,7 @@ const authController = {
       }
 
       const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET, { expiresIn: '7d' });
-      res.json({ token, user: { id: user.id, email: user.email, name: user.name, isPro: user.isPro, profilePic: user.profilePic, hasSetPrefs: user.hasSetPrefs, notifyEmail: user.notifyEmail, themeColor: user.themeColor, customLogoUrl: user.customLogoUrl, customAppName: user.customAppName } });
+      res.json({ token, user: formatUser(user) });
     } catch (error) {
       next(error);
     }
@@ -132,7 +155,7 @@ const authController = {
         }
       });
 
-      res.json({ message: 'Upgrade request submitted', user: { id: user.id, email: user.email, name: user.name, isPro: user.isPro, proStatus: user.proStatus, profilePic: user.profilePic } });
+      res.json({ message: 'Upgrade request submitted', user: formatUser(user) });
     } catch (error) {
       next(error);
     }
@@ -151,7 +174,7 @@ const authController = {
         data: { profilePic }
       });
 
-      res.json({ user: { id: updatedUser.id, email: updatedUser.email, name: updatedUser.name, isPro: updatedUser.isPro, profilePic: updatedUser.profilePic, hasSetPrefs: updatedUser.hasSetPrefs, notifyEmail: updatedUser.notifyEmail, themeColor: updatedUser.themeColor, customLogoUrl: updatedUser.customLogoUrl, customAppName: updatedUser.customAppName } });
+      res.json({ user: formatUser(updatedUser) });
     } catch (error) {
       next(error);
     }
@@ -170,7 +193,7 @@ const authController = {
         }
       });
       
-      res.json({ message: 'Settings updated', user: { id: user.id, email: user.email, name: user.name, isPro: user.isPro, profilePic: user.profilePic, hasSetPrefs: user.hasSetPrefs, notifyEmail: user.notifyEmail, themeColor: user.themeColor, customLogoUrl: user.customLogoUrl } });
+      res.json({ message: 'Settings updated', user: formatUser(user) });
     } catch (error) {
       next(error);
     }
@@ -203,7 +226,7 @@ const authController = {
         throw err;
       }
 
-      res.json({ user: { id: updatedUser.id, email: updatedUser.email, name: updatedUser.name, isPro: updatedUser.isPro, profilePic: updatedUser.profilePic, hasSetPrefs: updatedUser.hasSetPrefs, notifyEmail: updatedUser.notifyEmail, themeColor: updatedUser.themeColor, customLogoUrl: updatedUser.customLogoUrl, customAppName: updatedUser.customAppName } });
+      res.json({ user: formatUser(updatedUser) });
     } catch (error) {
       next(error);
     }
@@ -218,7 +241,7 @@ const authController = {
       if (!user) {
         return res.status(404).json({ message: 'User not found' });
       }
-      res.json({ user: { id: user.id, email: user.email, name: user.name, isPro: user.isPro, profilePic: user.profilePic, hasSetPrefs: user.hasSetPrefs, notifyEmail: user.notifyEmail, themeColor: user.themeColor, customLogoUrl: user.customLogoUrl, customAppName: user.customAppName } });
+      res.json({ user: formatUser(user) });
     } catch (error) {
       next(error);
     }

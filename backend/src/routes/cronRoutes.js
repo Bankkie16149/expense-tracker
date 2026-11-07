@@ -3,13 +3,14 @@ const router = express.Router();
 const { sendMonthlySummaryEmails } = require('../services/cronJobs');
 const emailService = require('../services/emailService');
 
-// Middleware to verify secret token
+// Middleware to verify secret token from environment variable
 const verifyCronSecret = (req, res, next) => {
   const secret = req.query.key || req.headers['x-cron-secret'];
-  const validSecret = process.env.CRON_SECRET || 'fintrack_cron_secret_2026';
+  const validSecret = process.env.CRON_SECRET;
 
-  if (!secret || secret !== validSecret) {
-    return res.status(401).json({ error: 'Unauthorized: Invalid cron secret key' });
+  // Strict check: CRON_SECRET must be configured and match the request
+  if (!validSecret || !secret || secret !== validSecret) {
+    return res.status(401).json({ error: 'Unauthorized: Invalid or unconfigured cron secret key' });
   }
   next();
 };

@@ -22,6 +22,7 @@ const adminRoutes = require('./routes/adminRoutes');
 const adRoutes = require('./routes/adRoutes');
 const notificationRoutes = require('./routes/notificationRoutes');
 const chatRoutes = require('./routes/chatRoutes');
+const cronRoutes = require('./routes/cronRoutes');
 const authenticate = require('./middleware/authMiddleware');
 const adminMiddleware = require('./middleware/adminMiddleware');
 const { initCronJobs } = require('./services/cronJobs');
@@ -70,6 +71,7 @@ app.use('/api/admin', authenticate, adminMiddleware, adminRoutes);
 app.use('/api/ads', adRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/chat', authenticate, chatRoutes);
+app.use('/api/cron', cronRoutes);
 
 app.get('/', async (req, res) => {
   let dbStatus = 'Online';

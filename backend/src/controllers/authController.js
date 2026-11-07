@@ -3,6 +3,7 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 const nodemailer = require('nodemailer');
+const emailService = require('../services/emailService');
 const authController = {
   async register(req, res, next) {
     try {
@@ -69,24 +70,14 @@ const authController = {
         }
       });
 
-      const transporter = nodemailer.createTransport({
-        service: 'gmail',
-        auth: {
-          user: process.env.SMTP_USER,
-          pass: process.env.SMTP_PASS
-        }
-      });
+      const resetUrl = `${process.env.FRONTEND_URL || 'https://fintrack.vercel.app'}/reset-password/${resetToken}`;
 
-      const resetUrl = `${process.env.FRONTEND_URL}/reset-password/${resetToken}`;
+      await emailService.sendEmail(
+        user.email,
+        'Password Reset Request / ตั้งรหัสผ่านใหม่',
+        `You requested a password reset.\n\nPlease click on the following link to reset your password:\n${resetUrl}\n\nIf you did not request this, please ignore this email.`
+      );
 
-      const mailOptions = {
-        from: `"Fintrack" <${process.env.SMTP_USER}>`,
-        to: user.email,
-        subject: 'Password Reset Request / ตั้งรหัสผ่านใหม่',
-        text: `You requested a password reset.\n\nPlease click on the following link to reset your password:\n${resetUrl}\n\nIf you did not request this, please ignore this email.`
-      };
-
-      await transporter.sendMail(mailOptions);
       res.json({ message: 'Password reset link sent to email' });
     } catch (error) {
       next(error);

@@ -11,8 +11,15 @@ const sendMonthlySummaryEmails = async () => {
   for (const user of users) {
     if (!user.email) continue;
 
-    const targetMonth = today.getMonth();
-    const targetYear = today.getFullYear();
+    // If triggered early in the month (e.g. day 1-5), summarize the previous month
+    // Otherwise summarize the current month
+    let targetDate = new Date(today);
+    if (today.getDate() <= 5) {
+      targetDate = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+    }
+    const targetMonth = targetDate.getMonth();
+    const targetYear = targetDate.getFullYear();
+    const monthName = targetDate.toLocaleString('th-TH', { month: 'long' });
 
     const transactions = await prisma.transaction.findMany({
       where: { userId: user.id },
@@ -31,8 +38,6 @@ const sendMonthlySummaryEmails = async () => {
       .filter(t => t.category?.type === 'expense')
       .reduce((sum, t) => sum + t.amount, 0);
     const balance = totalIncome - totalExpense;
-
-    const monthName = today.toLocaleString('th-TH', { month: 'long' });
     const subject = `[FinTrack] สรุปยอดค่าใช้จ่ายประจำเดือน ${monthName}`;
     const text = `
 เรียนคุณ ${user.name || user.email},

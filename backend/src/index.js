@@ -47,6 +47,13 @@ const corsOptions = {
 };
 app.use(cors(corsOptions));
 
+// Body Parsers
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ limit: '10mb', extended: true }));
+
+// Cron Webhook Routes (Exempt from Global Rate Limiting)
+app.use('/api/cron', cronRoutes);
+
 // Global Rate Limiting
 const globalLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
@@ -54,10 +61,9 @@ const globalLimiter = rateLimit({
   message: { message: 'Too many requests from this IP, please try again after 15 minutes' },
   standardHeaders: true, 
   legacyHeaders: false,
+  skip: (req) => req.path.startsWith('/cron') || req.originalUrl?.includes('/api/cron')
 });
 app.use('/api', globalLimiter);
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ limit: '10mb', extended: true }));
 
 // Global Audit Logger
 app.use(auditMiddleware);
@@ -71,7 +77,6 @@ app.use('/api/admin', authenticate, adminMiddleware, adminRoutes);
 app.use('/api/ads', adRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/chat', authenticate, chatRoutes);
-app.use('/api/cron', cronRoutes);
 
 app.get('/', async (req, res) => {
   let dbStatus = 'Online';

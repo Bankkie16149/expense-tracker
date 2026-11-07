@@ -1,11 +1,7 @@
 name: CD Pipeline (Deploy Backend)
 
 on:
-  push:
-    branches: [ "main", "master" ]
-    paths:
-      - 'backend/**' # รันเฉพาะตอนแก้โค้ดในโฟลเดอร์ backend เท่านั้น
-      - '.github/workflows/cd.yml'
+  workflow_dispatch: # ปิดโหมดอัตโนมัติ เปลี่ยนเป็นกดปุ่ม Deploy ด้วยตัวเองเผื่ออนาคต
 
 jobs:
   deploy:

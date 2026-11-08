@@ -22,7 +22,12 @@ const sendEmail = async (to, subject, text, html) => {
 
     // 1. Primary: Brevo REST API (HTTPS Port 443)
     if (brevoApiKey) {
-      const senderEmail = process.env.BREVO_SENDER_EMAIL || process.env.SMTP_USER || 'hoing11111@gmail.com';
+      const senderEmail = process.env.BREVO_SENDER_EMAIL || process.env.SMTP_USER;
+      if (!senderEmail) {
+        const errorMsg = 'BREVO_SENDER_EMAIL is not configured in environment variables.';
+        console.error(errorMsg);
+        return { success: false, error: errorMsg };
+      }
       const formattedHtml = html || `<div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; line-height: 1.6; white-space: pre-wrap; color: #334155;">${text}</div>`;
 
       const response = await axios.post(

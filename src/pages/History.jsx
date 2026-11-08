@@ -1,9 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import Layout from '../components/Layout';
 import { useTransactions } from '../hooks/useTransactions';
 import { useLanguage } from '../contexts/LanguageContext';
-import { Download, Trash2, History as HistoryIcon, ShieldCheck } from 'lucide-react';
+import { Download, Trash2, History as HistoryIcon, ShieldCheck, FilterX } from 'lucide-react';
 import TransactionRow from '../components/Dashboard/TransactionRow';
 import Swal from 'sweetalert2';
 import CategoryIcon from '../components/CategoryIcon';
@@ -11,13 +11,17 @@ import { fetchWithAuth } from '../utils/api';
 import PdfExportModal from '../components/PdfExportModal';
 
 const History = () => {
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const verifyDoc = searchParams.get('verify');
+  const queryMonth = searchParams.get('month');
+  const queryDate = searchParams.get('date');
+  const queryCategory = searchParams.get('category');
+
   const { transactions, isLoading } = useTransactions();
   const { t, getMonthName, language } = useLanguage();
-  const [filterMonth, setFilterMonth] = useState('all');
-  const [filterDate, setFilterDate] = useState('');
-  const [filterCategory, setFilterCategory] = useState('all');
+  const [filterMonth, setFilterMonth] = useState(queryMonth !== null ? queryMonth : 'all');
+  const [filterDate, setFilterDate] = useState(queryDate !== null ? queryDate : '');
+  const [filterCategory, setFilterCategory] = useState(queryCategory !== null ? queryCategory : 'all');
   const [searchQuery, setSearchQuery] = useState('');
   const [isPdfModalOpen, setIsPdfModalOpen] = useState(false);
   const [currentUser, setCurrentUser] = useState(() => {
@@ -27,6 +31,16 @@ const History = () => {
       return {};
     }
   });
+
+  // Extract unique category names from transactions for dynamic filter dropdown
+  const uniqueCategories = useMemo(() => {
+    const names = new Set();
+    transactions.forEach((tItem) => {
+      const name = tItem.category?.name || tItem.subtitle;
+      if (name) names.add(name);
+    });
+    return Array.from(names);
+  }, [transactions]);
 
   useEffect(() => {
     const handleUserUpdate = () => {
@@ -75,11 +89,27 @@ const History = () => {
     // Category filter
     let matchesCategory = true;
     if (filterCategory !== 'all') {
-      matchesCategory = (tItem.category?.name?.toLowerCase() === filterCategory.toLowerCase() || tItem.category?.type?.toLowerCase() === filterCategory.toLowerCase());
+      const catLower = filterCategory.toLowerCase();
+      matchesCategory = (
+        tItem.category?.name?.toLowerCase() === catLower ||
+        tItem.category?.type?.toLowerCase() === catLower ||
+        tItem.subtitle?.toLowerCase() === catLower
+      );
     }
 
     return matchesSearch && matchesCategory;
   });
+
+  const handleResetFilters = () => {
+    setFilterMonth('all');
+    setFilterDate('');
+    setFilterCategory('all');
+    const newParams = new URLSearchParams(searchParams);
+    newParams.delete('month');
+    newParams.delete('date');
+    newParams.delete('category');
+    setSearchParams(newParams, { replace: true });
+  };
 
   const triggerExport = () => {
     if (filteredTransactions.length === 0) {
@@ -145,25 +175,96 @@ const History = () => {
         <div style={{
           backgroundColor: '#f0fdf4',
           border: '1px solid #86efac',
-          borderRadius: '10px',
-          padding: '12px 18px',
+          borderRadius: '12px',
+          padding: '14px 18px',
           marginBottom: '1.5rem',
           display: 'flex',
-          alignItems: 'center',
+          alignItems: 'flex-start',
           gap: '12px',
           color: '#15803d',
           boxShadow: '0 1px 3px rgba(0,0,0,0.04)'
         }}>
-          <ShieldCheck size={24} style={{ flexShrink: 0, color: '#16a34a' }} />
-          <div>
-            <strong style={{ display: 'block', fontSize: '0.92rem' }}>
-              {language === 'th' ? 'การยืนยันตัวตนและความถูกต้องสำเร็จ' : 'Document Authenticity Verified'}
-            </strong>
-            <span style={{ fontSize: '0.8rem', color: '#166534' }}>
-              {language === 'th'
-                ? `เอกสารอ้างอิงเลขที่: ${verifyDoc} ได้รับการตรวจสอบและยืนยันผ่านระบบ FinTrack Cloud เรียบร้อยแล้ว`
-                : `Document reference: ${verifyDoc} is officially verified by FinTrack Cloud System.`}
-            </span>
+          <ShieldCheck size={26} style={{ flexShrink: 0, color: '#16a34a', marginTop: '2px' }} />
+          <div style={{ flex: 1 }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '8px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                <strong style={{ fontSize: '0.95rem' }}>
+                  {language === 'th' ? 'การยืนยันตัวตนและความถูกต้องสำเร็จ' : 'Document Authenticity Verified'}
+                </strong>
+                <span style={{
+                  fontSize: '0.75rem',
+                  backgroundColor: '#dcfce7',
+                  border: '1px solid #bbf7d0',
+                  padding: '2px 8px',
+                  borderRadius: '6px',
+                  fontWeight: 600,
+                  color: '#166534'
+                }}>
+                  {verifyDoc}
+                </span>
+              </div>
+
+              {(filterMonth !== 'all' || filterDate || filterCategory !== 'all') && (
+                <button
+                  type="button"
+                  onClick={handleResetFilters}
+                  style={{
+                    fontSize: '0.78rem',
+                    background: '#ffffff',
+                    border: '1px solid #86efac',
+                    borderRadius: '6px',
+                    padding: '4px 12px',
+                    color: '#15803d',
+                    cursor: 'pointer',
+                    fontWeight: 600,
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '4px',
+                    boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
+                    transition: 'all 0.15s ease'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = '#dcfce7';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = '#ffffff';
+                  }}
+                >
+                  <FilterX size={14} />
+                  {language === 'th' ? 'รีเซ็ตตัวกรอง (ดูทั้งหมด)' : 'Reset Filters (View All)'}
+                </button>
+              )}
+            </div>
+
+            <div style={{ fontSize: '0.82rem', color: '#166534', marginTop: '6px', lineHeight: 1.5 }}>
+              {language === 'th' ? (
+                <>
+                  เอกสารอ้างอิงเลขที่: <strong>{verifyDoc}</strong> ได้รับการยืนยันความถูกต้องผ่านระบบ FinTrack Cloud เรียบร้อยแล้ว
+                  {(filterMonth !== 'all' || filterDate || filterCategory !== 'all') ? (
+                    <span style={{ display: 'block', marginTop: '4px', color: '#14532d', fontWeight: 500 }}>
+                      ⚡ ระบบได้ตั้งค่าตัวกรองตามเงื่อนไขที่ออกในรายงานให้อัตโนมัติ (พบ <strong>{filteredTransactions.length}</strong> รายการ)
+                    </span>
+                  ) : (
+                    <span style={{ display: 'block', marginTop: '4px', color: '#14532d' }}>
+                      แสดงรายการธุรกรรมทั้งหมดตามรายงานฉบับนี้ (พบ <strong>{filteredTransactions.length}</strong> รายการ)
+                    </span>
+                  )}
+                </>
+              ) : (
+                <>
+                  Document reference: <strong>{verifyDoc}</strong> is officially verified by FinTrack Cloud System.
+                  {(filterMonth !== 'all' || filterDate || filterCategory !== 'all') ? (
+                    <span style={{ display: 'block', marginTop: '4px', color: '#14532d', fontWeight: 500 }}>
+                      ⚡ Filters automatically applied matching the exported report criteria (found <strong>{filteredTransactions.length}</strong> records).
+                    </span>
+                  ) : (
+                    <span style={{ display: 'block', marginTop: '4px', color: '#14532d' }}>
+                      Showing all transactions for this report (found <strong>{filteredTransactions.length}</strong> records).
+                    </span>
+                  )}
+                </>
+              )}
+            </div>
           </div>
         </div>
       )}
@@ -184,6 +285,17 @@ const History = () => {
                 <option value="food">{language === 'th' ? 'อาหาร' : 'Food'}</option>
                 <option value="housing">{language === 'th' ? 'ที่พัก/บ้าน' : 'Housing'}</option>
                 <option value="transportation">{language === 'th' ? 'เดินทาง' : 'Transportation'}</option>
+                {uniqueCategories
+                  .filter((cat) => !['food', 'housing', 'transportation', 'income', 'expense', 'อาหาร', 'ที่พัก/บ้าน', 'เดินทาง'].includes(cat.toLowerCase()))
+                  .map((cat) => (
+                    <option key={cat} value={cat}>{cat}</option>
+                  ))
+                }
+                {filterCategory !== 'all' && 
+                 !['food', 'housing', 'transportation', 'income', 'expense', 'อาหาร', 'ที่พัก/บ้าน', 'เดินทาง'].includes(filterCategory.toLowerCase()) && 
+                 !uniqueCategories.map(c => c.toLowerCase()).includes(filterCategory.toLowerCase()) && (
+                  <option value={filterCategory}>{filterCategory}</option>
+                )}
               </select>
               <input 
                 type="date" 

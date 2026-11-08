@@ -19,8 +19,8 @@ export const generateSignatureImage = (name = 'FinTrack User') => {
     ctx.fillStyle = '#1e3a8a';
     ctx.strokeStyle = '#1e3a8a';
 
-    // Set cursive signature font with fallbacks
-    ctx.font = 'italic 38px "Caveat", "Brush Script MT", "Segoe Script", "Dancing Script", "Apple Chancery", cursive';
+    // Set cursive signature font with fallbacks (Caveat for English, Charm for Thai)
+    ctx.font = 'italic 38px "Caveat", "Charm", "Brush Script MT", "Segoe Script", "Dancing Script", "Apple Chancery", cursive';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
 

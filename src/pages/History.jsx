@@ -1,18 +1,13 @@
-import React, { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Layout from '../components/Layout';
 import { useTransactions } from '../hooks/useTransactions';
 import { useLanguage } from '../contexts/LanguageContext';
 import { Download, Trash2, History as HistoryIcon } from 'lucide-react';
 import TransactionRow from '../components/Dashboard/TransactionRow';
 import Swal from 'sweetalert2';
-import { jsPDF } from 'jspdf';
-import autoTable from 'jspdf-autotable';
-import { SarabunFont } from '../assets/fonts/Sarabun';
 import CategoryIcon from '../components/CategoryIcon';
 import { fetchWithAuth } from '../utils/api';
-import { notifyUser } from '../utils/notifications';
-
-
+import PdfExportModal from '../components/PdfExportModal';
 
 const History = () => {
   const { transactions, isLoading } = useTransactions();
@@ -21,6 +16,30 @@ const History = () => {
   const [filterDate, setFilterDate] = useState('');
   const [filterCategory, setFilterCategory] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
+  const [isPdfModalOpen, setIsPdfModalOpen] = useState(false);
+  const [currentUser, setCurrentUser] = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem('user') || '{}');
+    } catch {
+      return {};
+    }
+  });
+
+  useEffect(() => {
+    const handleUserUpdate = () => {
+      try {
+        setCurrentUser(JSON.parse(localStorage.getItem('user') || '{}'));
+      } catch (err) {
+        console.error(err);
+      }
+    };
+    window.addEventListener('userUpdated', handleUserUpdate);
+    window.addEventListener('storage', handleUserUpdate);
+    return () => {
+      window.removeEventListener('userUpdated', handleUserUpdate);
+      window.removeEventListener('storage', handleUserUpdate);
+    };
+  }, []);
 
   const filteredTransactions = transactions.filter(tItem => {
     const tDate = new Date(tItem.date);
@@ -63,221 +82,14 @@ const History = () => {
     if (filteredTransactions.length === 0) {
       Swal.fire({
         icon: 'warning',
-        title: 'No Data',
-        text: 'Cannot export because there is no data.',
+        title: language === 'th' ? 'ไม่พบข้อมูล' : 'No Data',
+        text: language === 'th' ? 'ไม่สามารถส่งออกได้เนื่องจากไม่มีข้อมูลตามเงื่อนไขที่เลือก' : 'Cannot export because there is no data.',
         confirmButtonColor: 'var(--primary-main)'
       });
       return;
     }
 
-    Swal.fire({
-      title: 'เลือภาษาของรายงาน\nSelect Report Language',
-      showCancelButton: true,
-      confirmButtonText: 'ไทย',
-      cancelButtonText: 'English',
-      confirmButtonColor: 'var(--primary-main)',
-      cancelButtonColor: '#64748b',
-    }).then((result) => {
-      if (result.isConfirmed) {
-        handleExportPDF('th');
-      } else if (result.dismiss === Swal.DismissReason.cancel) {
-        handleExportPDF('en');
-      }
-    });
-  };
-
-  const handleExportPDF = (exportLang) => {
-    const doc = new jsPDF();
-    
-    doc.addFileToVFS("Sarabun-Regular.ttf", SarabunFont);
-    doc.addFont("Sarabun-Regular.ttf", "Sarabun", "normal");
-    doc.setFont("Sarabun");
-
-    const pageWidth = doc.internal.pageSize.width;
-    const pageHeight = doc.internal.pageSize.height;
-
-    // Helper to draw Fintrack Logo
-    const drawFintrackLogo = (x, y, size) => {
-      doc.setFillColor(0, 51, 102);
-      doc.roundedRect(x, y, size, size, size * 0.2, size * 0.2, 'F');
-      
-      doc.setFillColor(255, 255, 255);
-      doc.rect(x + size * 0.3, y + size * 0.25, size * 0.12, size * 0.5, 'F'); // stem
-      doc.rect(x + size * 0.4, y + size * 0.25, size * 0.3, size * 0.12, 'F'); // top bar
-      doc.rect(x + size * 0.4, y + size * 0.45, size * 0.2, size * 0.12, 'F'); // mid bar
-
-      doc.setDrawColor(16, 185, 129); // #10b981 green
-      doc.setLineWidth(size * 0.08);
-      doc.line(x + size * 0.5, y + size * 0.7, x + size * 0.8, y + size * 0.4); // diagonal
-      doc.line(x + size * 0.8, y + size * 0.4, x + size * 0.6, y + size * 0.4); // arrow top
-      doc.line(x + size * 0.8, y + size * 0.4, x + size * 0.8, y + size * 0.6); // arrow right
-    };
-
-    // Header Logo
-    drawFintrackLogo(14, 12, 10);
-    doc.setTextColor(0, 51, 102);
-    // Custom App Name
-    let customApp = null;
-    try {
-      const u = JSON.parse(localStorage.getItem('user') || '{}');
-      if (u.customAppName) customApp = u.customAppName;
-    } catch(e) {}
-
-    if (customApp) {
-      doc.setFontSize(16);
-      doc.text(customApp, 27, 17);
-      
-      const textWidth = doc.getTextWidth(customApp);
-      doc.setFontSize(7);
-      doc.setTextColor(100, 100, 100);
-      doc.text("BY FINTRACK", 27 + textWidth - doc.getTextWidth("BY FINTRACK"), 21);
-      doc.setTextColor(0, 51, 102);
-    } else {
-      doc.setFontSize(16);
-      doc.text("FinTrack", 27, 19);
-    }
-
-    // Title
-    doc.setTextColor(50, 50, 50);
-    doc.setFontSize(12);
-
-    let periodText = exportLang === 'th' ? 'ทั้งหมด' : 'All Time';
-    if (filterDate) {
-      periodText = exportLang === 'th' ? `วันที่ ${filterDate}` : `Date ${filterDate}`;
-    } else if (filterMonth !== 'all') {
-      const thMonths = ['มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน', 'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'];
-      const enMonths = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
-      periodText = exportLang === 'th' ? thMonths[parseInt(filterMonth)] : enMonths[parseInt(filterMonth)];
-    }
-    
-    const now = new Date();
-    const exportTime = exportLang === 'th' 
-      ? now.toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' }) + ' ' + now.toLocaleTimeString('th-TH')
-      : now.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) + ' ' + now.toLocaleTimeString('en-US');
-
-    const titleStr = exportLang === 'th' ? `รายการแจ้งธุรกรรมที่ดำเนินการในเดือน: ${periodText}` : `Transaction Report for: ${periodText}`;
-    const timeStr = exportLang === 'th' ? `เวลาที่ส่งออก: ${exportTime}` : `Exported at: ${exportTime}`;
-    doc.text(titleStr, 14, 30);
-    doc.text(timeStr, 14, 37);
-    
-    const tableColumn = exportLang === 'th' 
-      ? ["รายการ", "หมวดหมู่", "วันที่", "จำนวนเงิน"]
-      : ["Transaction", "Category", "Date", "Amount"];
-
-    const tableRows = [];
-
-    filteredTransactions.forEach(tItem => {
-      const transactionData = [
-        tItem.title,
-        tItem.category?.name || tItem.subtitle,
-        exportLang === 'th' 
-          ? new Date(tItem.date).toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' })
-          : new Date(tItem.date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }),
-        `${tItem.category?.type === 'expense' ? '-' : '+'}฿${tItem.amount.toLocaleString()}`
-      ];
-      tableRows.push(transactionData);
-    });
-
-    let reportIncome = 0;
-    let reportExpense = 0;
-    filteredTransactions.forEach(t => {
-      if (t.category?.type === 'income') reportIncome += t.amount;
-      if (t.category?.type === 'expense') reportExpense += t.amount;
-    });
-
-
-    autoTable(doc, {
-      head: [tableColumn],
-      body: tableRows,
-      startY: 43,
-      styles: {
-        font: "Sarabun",
-        fontSize: 10
-      },
-      headStyles: {
-        font: "Sarabun",
-        fontStyle: "normal",
-        fontSize: 12,
-        fillColor: [0, 51, 102]
-      },
-      margin: { bottom: 30 },
-      didDrawPage: function(data) {
-        doc.setFont("Sarabun");
-        doc.setFontSize(10);
-        doc.setTextColor(100, 100, 100);
-        
-        const supportContact = import.meta.env.VITE_SUPPORT_EMAIL ? ` (${import.meta.env.VITE_SUPPORT_EMAIL})` : '';
-        const footerText = exportLang === 'th' 
-          ? `ขอบคุณที่ใช้บริการ FinTrack${supportContact}`
-          : `Thank you for using FinTrack${supportContact}`;
-        const textWidth = doc.getTextWidth(footerText);
-        doc.text(footerText, (pageWidth - textWidth) / 2, pageHeight - 15);
-        
-        const footerLogoSize = 6;
-        const footerLogoX = (pageWidth - footerLogoSize - 18) / 2;
-        drawFintrackLogo(footerLogoX, pageHeight - 10, footerLogoSize);
-        
-        doc.setTextColor(0, 51, 102);
-        if (customApp) {
-          doc.setFontSize(10);
-          doc.text(customApp, footerLogoX + footerLogoSize + 3, pageHeight - 6);
-          const fTextWidth = doc.getTextWidth(customApp);
-          doc.setFontSize(5);
-          doc.setTextColor(100, 100, 100);
-          doc.text("BY FINTRACK", footerLogoX + footerLogoSize + 3 + fTextWidth - doc.getTextWidth("BY FINTRACK"), pageHeight - 3);
-        } else {
-          doc.setFontSize(10);
-          doc.text("FinTrack", footerLogoX + footerLogoSize + 3, pageHeight - 5);
-        }
-      }
-    });
-
-    let finalY = doc.lastAutoTable.finalY || 43;
-
-    if (finalY > pageHeight - 60) {
-      doc.addPage();
-      finalY = 20;
-    }
-
-    doc.setFillColor(243, 246, 249);
-    doc.setDrawColor(220, 225, 230);
-    doc.roundedRect(14, finalY + 10, pageWidth - 28, 45, 2, 2, 'FD');
-    
-    doc.setFont("Sarabun");
-    doc.setFontSize(12);
-    
-    doc.setTextColor(50, 50, 50);
-    doc.text(exportLang === 'th' ? `สรุปตามช่วงเวลาที่เลือก (ในรายงานนี้):` : `Summary for selected period:`, 20, finalY + 22);
-    
-    doc.setTextColor(39, 174, 96); // Green
-    doc.text(exportLang === 'th' ? `รายรับรวม: +฿${reportIncome.toLocaleString()}` : `Total Income: +฿${reportIncome.toLocaleString()}`, 20, finalY + 32);
-    
-    doc.setTextColor(231, 76, 60); // Red
-    doc.text(exportLang === 'th' ? `รายจ่ายรวม: -฿${reportExpense.toLocaleString()}` : `Total Expense: -฿${reportExpense.toLocaleString()}`, 90, finalY + 32);
-    
-    // Approval Text
-    doc.setTextColor(0, 51, 102); // Primary Blue
-    doc.setFontSize(12);
-    doc.text(exportLang === 'th' ? `อนุมัติโดย ธนกร ทิพย์วารีรัตนะ` : `Approved by Tanakorn Thipwareeratana`, 20, finalY + 45);
-
-    let filename = 'all-months';
-    if (filterDate) {
-      filename = filterDate;
-    } else if (filterMonth !== 'all') {
-      const engMonths = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
-      filename = engMonths[parseInt(filterMonth)].toLowerCase();
-    }
-    
-    doc.save(`fintrack_report_${filename}.pdf`);
-
-    try {
-      const user = JSON.parse(localStorage.getItem('user'));
-      if (user) {
-        notifyUser(user, `คุณได้ส่งออกรายงานรูปแบบ PDF เรียบร้อยแล้ว (${filename})`, 'summary');
-      }
-    } catch(e) {
-      console.error(e);
-    }
+    setIsPdfModalOpen(true);
   };
 
   const handleDeleteAll = async () => {
@@ -308,7 +120,7 @@ const History = () => {
         } else {
           throw new Error('Failed to delete');
         }
-      } catch (error) {
+      } catch {
         Swal.fire('Error', 'Failed to delete transactions.', 'error');
       }
     }
@@ -421,6 +233,19 @@ const History = () => {
           </table>
         </div>
       </div>
+
+      {isPdfModalOpen && (
+        <PdfExportModal
+          isOpen={isPdfModalOpen}
+          onClose={() => setIsPdfModalOpen(false)}
+          transactions={filteredTransactions}
+          filterMonth={filterMonth}
+          filterDate={filterDate}
+          filterCategory={filterCategory}
+          initialLang={language || 'th'}
+          user={currentUser}
+        />
+      )}
     </Layout>
   );
 };

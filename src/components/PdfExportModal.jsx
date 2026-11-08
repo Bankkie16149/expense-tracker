@@ -1,4 +1,4 @@
-import { useState, useRef, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import QRCode from 'react-qr-code';
 import { 
@@ -53,7 +53,6 @@ const PdfExportModal = ({
 
   const [zoom, setZoom] = useState(() => getFitZoom());
   const [isGenerating, setIsGenerating] = useState(false);
-  const qrRef = useRef(null);
 
   useEffect(() => {
     const handleResize = () => {
@@ -222,38 +221,6 @@ const PdfExportModal = ({
     try {
       setIsGenerating(true);
 
-      // Extract QR code data URL from SVG ref if available
-      let qrDataUrl = null;
-      if (qrRef.current) {
-        try {
-          const svgEl = qrRef.current.querySelector('svg');
-          if (svgEl) {
-            const svgData = new XMLSerializer().serializeToString(svgEl);
-            const canvas = document.createElement('canvas');
-            canvas.width = 120;
-            canvas.height = 120;
-            const ctx = canvas.getContext('2d');
-            const img = new Image();
-            const svgBlob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
-            const URL = window.URL || window.webkitURL || window;
-            const blobURL = URL.createObjectURL(svgBlob);
-
-            await new Promise((resolve) => {
-              img.onload = () => {
-                ctx.drawImage(img, 0, 0, 120, 120);
-                qrDataUrl = canvas.toDataURL('image/png');
-                URL.revokeObjectURL(blobURL);
-                resolve();
-              };
-              img.onerror = () => resolve();
-              img.src = blobURL;
-            });
-          }
-        } catch (e) {
-          console.warn('Could not serialize QR SVG, fallback to vector box', e);
-        }
-      }
-
       const generatedName = await generatePdfReport({
         transactions,
         filterMonth,
@@ -261,7 +228,6 @@ const PdfExportModal = ({
         filterCategory,
         language: lang,
         user,
-        qrDataUrl,
         signatureDataUrl
       });
 
@@ -716,7 +682,7 @@ const PdfExportModal = ({
 
               {/* Digital Verification */}
               <div className="pdf-verify-box">
-                <div className="pdf-verify-qr" ref={qrRef}>
+                <div className="pdf-verify-qr">
                   <QRCode
                     value={verificationUrl}
                     size={52}

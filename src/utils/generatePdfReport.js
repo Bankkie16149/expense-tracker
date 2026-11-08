@@ -1,7 +1,56 @@
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import qrcode from 'qrcode-generator';
 import { SarabunFont } from '../assets/fonts/Sarabun';
 import { generateSignatureImage } from './signatureGenerator';
+
+/**
+ * Draw a clean, 100% vector scannable QR Code directly in jsPDF
+ */
+const drawVectorQrCode = (doc, text, x, y, size) => {
+  try {
+    const qr = qrcode(0, 'M');
+    qr.addData(text);
+    qr.make();
+
+    const count = qr.getModuleCount();
+    const marginModules = 1;
+    const totalModules = count + marginModules * 2;
+    const cellSize = size / totalModules;
+
+    // Draw white background card with rounded corners
+    doc.setFillColor(255, 255, 255);
+    doc.setDrawColor(203, 213, 225);
+    doc.setLineWidth(0.2);
+    doc.roundedRect(x, y, size, size, 1, 1, 'FD');
+
+    // Draw crisp pure black QR cells using run-length encoding for seam-free vector rendering
+    doc.setFillColor(0, 0, 0);
+    for (let r = 0; r < count; r++) {
+      let c = 0;
+      while (c < count) {
+        if (qr.isDark(r, c)) {
+          let runLen = 1;
+          while (c + runLen < count && qr.isDark(r, c + runLen)) {
+            runLen++;
+          }
+          doc.rect(
+            x + (c + marginModules) * cellSize,
+            y + (r + marginModules) * cellSize,
+            runLen * cellSize + 0.03,
+            cellSize + 0.03,
+            'F'
+          );
+          c += runLen;
+        } else {
+          c++;
+        }
+      }
+    }
+  } catch (err) {
+    console.error('Failed to draw vector QR code:', err);
+  }
+};
 
 /**
  * Generate redesigned FinTrack financial PDF statement
@@ -503,35 +552,35 @@ export const generatePdfReport = async ({
 
   doc.setFillColor(248, 250, 252);
   doc.setDrawColor(226, 232, 240);
+  doc.setLineWidth(0.3);
   doc.roundedRect(verifyX, signAreaY, verifyW, verifyH, 2, 2, 'FD');
+
+  // Direct scannable QR Code pointing to /history?verify=DOC_NO
+  const originUrl = typeof window !== 'undefined' && window.location.origin
+    ? window.location.origin
+    : 'https://fintrack.app';
+  const qrTargetUrl = `${originUrl}/history?verify=${encodeURIComponent(docNo)}`;
 
   if (qrDataUrl) {
     try {
-      doc.addImage(qrDataUrl, 'PNG', verifyX + 3, signAreaY + 2.5, 15, 15);
-    } catch (e) {
-      console.error('Error drawing QR code to PDF:', e);
+      doc.addImage(qrDataUrl, 'PNG', verifyX + 2.5, signAreaY + 2.25, 15.5, 15.5);
+    } catch {
+      drawVectorQrCode(doc, qrTargetUrl, verifyX + 2.5, signAreaY + 2.25, 15.5);
     }
   } else {
-    // Mini mock QR box
-    doc.setFillColor(255, 255, 255);
-    doc.roundedRect(verifyX + 3, signAreaY + 2.5, 15, 15, 1, 1, 'FD');
-    doc.setFillColor(0, 51, 102);
-    doc.rect(verifyX + 5, signAreaY + 4.5, 4, 4, 'F');
-    doc.rect(verifyX + 12, signAreaY + 4.5, 4, 4, 'F');
-    doc.rect(verifyX + 5, signAreaY + 11.5, 4, 4, 'F');
-    doc.rect(verifyX + 11, signAreaY + 11.5, 5, 5, 'F');
+    drawVectorQrCode(doc, qrTargetUrl, verifyX + 2.5, signAreaY + 2.25, 15.5);
   }
 
-  doc.setFontSize(7);
+  doc.setFontSize(7.5);
   doc.setTextColor(15, 23, 42);
-  doc.text('Digital Verification', verifyX + 21, signAreaY + 6);
+  doc.text('Digital Verification', verifyX + 20.5, signAreaY + 6.5);
 
-  doc.setFontSize(6);
+  doc.setFontSize(6.2);
   doc.setTextColor(100, 116, 139);
   const verifyDesc = language === 'th'
     ? 'สแกนเพื่อตรวจสอบความถูกต้อง\nของเอกสารระบบ FinTrack'
     : 'Scan to verify authenticity on\nFinTrack Cloud System';
-  doc.text(verifyDesc, verifyX + 21, signAreaY + 11);
+  doc.text(verifyDesc, verifyX + 20.5, signAreaY + 11.5);
 
   // Stamp Document Footers on Every Page
   const totalPages = doc.internal.getNumberOfPages();

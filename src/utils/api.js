@@ -16,10 +16,15 @@ export const fetchWithAuth = async (endpoint, options = {}) => {
   const response = await fetch(url, { ...options, headers });
   
   if (response.status === 401) {
-    // Unauthorized, maybe clear token and redirect to login
+    // Unauthorized or session expired: clear local storage and redirect to login with return target
     localStorage.removeItem('token');
     localStorage.removeItem('user');
-    window.location.href = '/';
+    const currentPath = window.location.pathname + window.location.search;
+    if (currentPath !== '/' && !currentPath.startsWith('/forgot-password') && !currentPath.startsWith('/reset-password')) {
+      window.location.href = `/?redirect=${encodeURIComponent(currentPath)}`;
+    } else {
+      window.location.href = '/';
+    }
   }
 
   return response;

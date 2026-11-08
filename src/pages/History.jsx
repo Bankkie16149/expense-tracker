@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import Layout from '../components/Layout';
 import { useTransactions } from '../hooks/useTransactions';
 import { useLanguage } from '../contexts/LanguageContext';
-import { Download, Trash2, History as HistoryIcon } from 'lucide-react';
+import { Download, Trash2, History as HistoryIcon, ShieldCheck } from 'lucide-react';
 import TransactionRow from '../components/Dashboard/TransactionRow';
 import Swal from 'sweetalert2';
 import CategoryIcon from '../components/CategoryIcon';
@@ -10,6 +11,8 @@ import { fetchWithAuth } from '../utils/api';
 import PdfExportModal from '../components/PdfExportModal';
 
 const History = () => {
+  const [searchParams] = useSearchParams();
+  const verifyDoc = searchParams.get('verify');
   const { transactions, isLoading } = useTransactions();
   const { t, getMonthName, language } = useLanguage();
   const [filterMonth, setFilterMonth] = useState('all');
@@ -128,7 +131,7 @@ const History = () => {
 
   return (
     <Layout searchQuery={searchQuery} setSearchQuery={setSearchQuery} showSearch={true}>
-      <div className="page-header" style={{ marginBottom: '2rem' }}>
+      <div className="page-header" style={{ marginBottom: '1.5rem' }}>
         <div style={{ display: 'flex', alignItems: 'flex-start', gap: '1rem', flex: 1, flexWrap: 'wrap' }}>
           <HistoryIcon size={28} style={{ color: 'gray', flexShrink: 0, marginTop: '4px' }} />
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem', alignItems: 'flex-start', flexWrap: 'wrap' }}>
@@ -137,6 +140,33 @@ const History = () => {
           </div>
         </div>
       </div>
+
+      {verifyDoc && (
+        <div style={{
+          backgroundColor: '#f0fdf4',
+          border: '1px solid #86efac',
+          borderRadius: '10px',
+          padding: '12px 18px',
+          marginBottom: '1.5rem',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '12px',
+          color: '#15803d',
+          boxShadow: '0 1px 3px rgba(0,0,0,0.04)'
+        }}>
+          <ShieldCheck size={24} style={{ flexShrink: 0, color: '#16a34a' }} />
+          <div>
+            <strong style={{ display: 'block', fontSize: '0.92rem' }}>
+              {language === 'th' ? 'การยืนยันตัวตนและความถูกต้องสำเร็จ' : 'Document Authenticity Verified'}
+            </strong>
+            <span style={{ fontSize: '0.8rem', color: '#166534' }}>
+              {language === 'th'
+                ? `เอกสารอ้างอิงเลขที่: ${verifyDoc} ได้รับการตรวจสอบและยืนยันผ่านระบบ FinTrack Cloud เรียบร้อยแล้ว`
+                : `Document reference: ${verifyDoc} is officially verified by FinTrack Cloud System.`}
+            </span>
+          </div>
+        </div>
+      )}
 
       <div className="card history-card">
         <div className="history-header">

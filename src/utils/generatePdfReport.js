@@ -1,6 +1,7 @@
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { SarabunFont } from '../assets/fonts/Sarabun';
+import { generateSignatureImage } from './signatureGenerator';
 
 /**
  * Generate redesigned FinTrack financial PDF statement
@@ -13,7 +14,8 @@ export const generatePdfReport = async ({
   filterCategory = 'all',
   language = 'th',
   user = {},
-  qrDataUrl = null
+  qrDataUrl = null,
+  signatureDataUrl = null
 }) => {
   const doc = new jsPDF('p', 'mm', 'a4');
 
@@ -464,11 +466,24 @@ export const generatePdfReport = async ({
 
   const signAreaY = finalY + 4;
 
-  // Left: Authorized Signer
-  doc.setFont('Sarabun');
-  doc.setFontSize(11);
-  doc.setTextColor(30, 58, 138); // Blue signature script tone
-  doc.text(userName, marginX + 15, signAreaY + 8);
+  // Left: Authorized Signer Handwritten Signature
+  const finalSignatureUrl = signatureDataUrl || generateSignatureImage(userName);
+  if (finalSignatureUrl) {
+    try {
+      doc.addImage(finalSignatureUrl, 'PNG', marginX + 10, signAreaY - 2, 50, 14);
+    } catch (e) {
+      console.warn('Could not draw signature image to PDF:', e);
+      doc.setFont('Sarabun', 'normal');
+      doc.setFontSize(10);
+      doc.setTextColor(30, 58, 138);
+      doc.text(userName, marginX + 35, signAreaY + 8, { align: 'center' });
+    }
+  } else {
+    doc.setFont('Sarabun', 'normal');
+    doc.setFontSize(10);
+    doc.setTextColor(30, 58, 138);
+    doc.text(userName, marginX + 35, signAreaY + 8, { align: 'center' });
+  }
 
   doc.setDrawColor(148, 163, 184);
   doc.line(marginX + 5, signAreaY + 11, marginX + 65, signAreaY + 11);

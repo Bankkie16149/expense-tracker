@@ -1,13 +1,5 @@
 const nodemailer = require('nodemailer');
-const { Resend } = require('resend');
-
-const getResendClient = () => {
-  const apiKey = process.env.RESEND_API_KEY;
-  if (apiKey) {
-    return new Resend(apiKey);
-  }
-  return null;
-};
+const axios = require('axios');
 
 const createTransporter = () => {
   return nodemailer.createTransport({
@@ -26,31 +18,38 @@ const createTransporter = () => {
 
 const sendEmail = async (to, subject, text, html) => {
   try {
-    const resend = getResendClient();
+    const brevoApiKey = process.env.BREVO_API_KEY;
 
-    // 1. Primary: Resend API (HTTPS Port 443 - works everywhere including Render Free Tier)
-    if (resend) {
-      const from = process.env.EMAIL_FROM || 'FinTrack <Fintrack@resend.dev>';
+    // 1. Primary: Brevo REST API (HTTPS Port 443 - works everywhere, sends to ANY recipient without custom domain)
+    if (brevoApiKey) {
+      const senderEmail = process.env.BREVO_SENDER_EMAIL || process.env.SMTP_USER;
       const formattedHtml = html || `<div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; line-height: 1.6; white-space: pre-wrap; color: #334155;">${text}</div>`;
 
-      const response = await resend.emails.send({
-        from,
-        to: [to],
-        subject,
-        text,
-        html: formattedHtml,
-      });
+      const response = await axios.post(
+        'https://api.brevo.com/v3/smtp/email',
+        {
+          sender: { name: 'FinTrack', email: senderEmail },
+          to: [{ email: to }],
+          subject,
+          htmlContent: formattedHtml,
+          textContent: text,
+        },
+        {
+          headers: {
+            'api-key': brevoApiKey,
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+          },
+          timeout: 10000,
+        }
+      );
 
-      if (response.error) {
-        console.error('Resend API error:', response.error);
-        return { success: false, error: response.error };
-      }
-
-      console.log('Email sent via Resend successfully:', response.data?.id);
-      return { success: true, messageId: response.data?.id, provider: 'resend' };
+      const messageId = response.data?.messageId;
+      console.log('Email sent via Brevo successfully:', messageId);
+      return { success: true, messageId, provider: 'brevo' };
     }
 
-    // 2. Secondary: SMTP / Nodemailer (if SMTP_USER is set and no Resend key)
+    // 2. Secondary: SMTP / Nodemailer (local fallback)
     if (process.env.SMTP_USER && process.env.SMTP_PASS) {
       const transporter = createTransporter();
       const info = await transporter.sendMail({
@@ -73,8 +72,9 @@ const sendEmail = async (to, subject, text, html) => {
     console.log('--- END EMAIL ---');
     return { success: true, mock: true };
   } catch (error) {
-    console.error('Error sending email:', error);
-    return { success: false, error: error.message || error };
+    const errData = error.response?.data || error.message || error;
+    console.error('Error sending email:', errData);
+    return { success: false, error: errData };
   }
 };
 

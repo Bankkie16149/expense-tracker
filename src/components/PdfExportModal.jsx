@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import Logo from './Logo';
 import { generatePdfReport } from '../utils/generatePdfReport';
+import { generateSignatureImage } from '../utils/signatureGenerator';
 import { notifyUser } from '../utils/notifications';
 import { useTheme } from '../contexts/ThemeContext';
 import '../styles/pdfExportModal.css';
@@ -195,7 +196,11 @@ const PdfExportModal = ({
     };
   }, [transactions, filterMonth, filterDate, filterCategory, lang, user]);
 
-  if (!isOpen) return null;
+  const userName = user?.name || user?.email || (lang === 'th' ? 'ผู้ใช้งาน FinTrack' : 'FinTrack User');
+  const customAppName = user?.customAppName || 'FinTrack';
+  const isPro = !!user?.isPro;
+  const verificationUrl = `${window.location.origin}/history?verify=${docNo}`;
+  const signatureDataUrl = useMemo(() => generateSignatureImage(userName), [userName]);
 
   // Zoom handlers
   const handleZoomIn = () => setZoom((prev) => Math.min(1.4, Math.round((prev + 0.1) * 10) / 10));
@@ -206,6 +211,11 @@ const PdfExportModal = ({
   const handlePrint = () => {
     window.print();
   };
+
+  const categoryColors = ['#2563eb', '#0891b2', '#10b981', '#8b5cf6'];
+  const avgExpense = Math.round(totalExpense / 4);
+
+  if (!isOpen) return null;
 
   // Download PDF handler
   const handleDownloadPDF = async () => {
@@ -251,7 +261,8 @@ const PdfExportModal = ({
         filterCategory,
         language: lang,
         user,
-        qrDataUrl
+        qrDataUrl,
+        signatureDataUrl
       });
 
       if (user) {
@@ -263,13 +274,6 @@ const PdfExportModal = ({
       setIsGenerating(false);
     }
   };
-
-  const categoryColors = ['#2563eb', '#0891b2', '#10b981', '#8b5cf6'];
-  const avgExpense = Math.round(totalExpense / 4);
-  const userName = user?.name || user?.email || (lang === 'th' ? 'ผู้ใช้งาน FinTrack' : 'FinTrack User');
-  const customAppName = user?.customAppName || 'FinTrack';
-  const isPro = !!user?.isPro;
-  const verificationUrl = `${window.location.origin}/history?verify=${docNo}`;
 
   return createPortal(
     <div className={`pdf-modal-overlay ${isDarkMode ? 'theme-dark' : 'theme-light'}`}>
@@ -694,7 +698,15 @@ const PdfExportModal = ({
             <div className="pdf-bottom-section">
               {/* Authorized Signer */}
               <div className="pdf-sign-box">
-                <span className="pdf-sign-script">{userName}</span>
+                {signatureDataUrl ? (
+                  <img
+                    src={signatureDataUrl}
+                    alt="Signature"
+                    style={{ height: '34px', objectFit: 'contain', marginBottom: '-4px' }}
+                  />
+                ) : (
+                  <span className="pdf-sign-script">{userName}</span>
+                )}
                 <div className="pdf-sign-line" />
                 <span className="pdf-sign-name">{userName}</span>
                 <span className="pdf-sign-role">

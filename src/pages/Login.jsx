@@ -1,7 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Lock, Loader2, Mail, User } from 'lucide-react';
-import Footer from '../components/Footer';
 import Logo from '../components/Logo';
 
 const Login = () => {
@@ -13,7 +12,9 @@ const Login = () => {
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (token) {
-      navigate('/dashboard');
+      const searchParams = new URLSearchParams(window.location.search);
+      const redirectTarget = searchParams.get('redirect') ? decodeURIComponent(searchParams.get('redirect')) : '/dashboard';
+      navigate(redirectTarget, { replace: true });
     }
   }, [navigate]);
 
@@ -72,7 +73,9 @@ const Login = () => {
       localStorage.setItem('token', data.token);
       localStorage.setItem('user', JSON.stringify(data.user));
       window.dispatchEvent(new Event('userUpdated'));
-      navigate('/dashboard');
+      const searchParams = new URLSearchParams(window.location.search);
+      const redirectTarget = searchParams.get('redirect') ? decodeURIComponent(searchParams.get('redirect')) : '/dashboard';
+      navigate(redirectTarget, { replace: true });
     } catch (err) {
       setError(err.message);
     } finally {

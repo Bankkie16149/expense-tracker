@@ -1060,6 +1060,12 @@ select.form-control {
   flex: 1 1 auto;
 }
 
+@media (max-width: 480px) {
+  .history-actions-group {
+    width: 100%;
+  }
+}
+
 .table-responsive {
   width: 100%;
   overflow-x: auto;

@@ -1,18 +1,16 @@
-/* PDF Export Preview Modal Styles */
+/* PDF Export Preview Modal Styles - Responsive & Theme-Adaptive */
 
 .pdf-modal-overlay {
   position: fixed;
   inset: 0;
   z-index: 9999;
-  background-color: rgba(15, 23, 42, 0.85);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
   display: flex;
   flex-direction: column;
   height: 100vh;
   width: 100vw;
   overflow: hidden;
   animation: pdfFadeIn 0.2s ease-out;
+  font-family: 'IBM Plex Sans Thai', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
 @keyframes pdfFadeIn {
@@ -20,19 +18,65 @@
   to { opacity: 1; }
 }
 
-/* Top Toolbar */
+/* =========================================
+   THEME STYLES: DARK VS LIGHT
+   ========================================= */
+
+/* Dark Theme (Default / Dark Mode) */
+.pdf-modal-overlay.theme-dark {
+  --pdf-backdrop: rgba(11, 17, 33, 0.88);
+  --pdf-toolbar-bg: #0f172a;
+  --pdf-toolbar-border: #1e293b;
+  --pdf-toolbar-text: #f8fafc;
+  --pdf-toolbar-text-muted: #94a3b8;
+  --pdf-control-bg: #1e293b;
+  --pdf-control-hover: rgba(255, 255, 255, 0.1);
+  --pdf-canvas-bg: #1e293b;
+  --pdf-btn-print-bg: #1e293b;
+  --pdf-btn-print-border: #334155;
+  --pdf-btn-print-text: #f1f5f9;
+  --pdf-btn-download-bg: linear-gradient(135deg, #0284c7, #2563eb);
+}
+
+/* Light Theme */
+.pdf-modal-overlay.theme-light {
+  --pdf-backdrop: rgba(15, 23, 42, 0.45);
+  --pdf-toolbar-bg: #ffffff;
+  --pdf-toolbar-border: #e2e8f0;
+  --pdf-toolbar-text: #0f172a;
+  --pdf-toolbar-text-muted: #64748b;
+  --pdf-control-bg: #f1f5f9;
+  --pdf-control-hover: #e2e8f0;
+  --pdf-canvas-bg: #e2e8f0;
+  --pdf-btn-print-bg: #ffffff;
+  --pdf-btn-print-border: #cbd5e1;
+  --pdf-btn-print-text: #0f172a;
+  --pdf-btn-download-bg: linear-gradient(135deg, #00509d, #003366);
+}
+
+.pdf-modal-overlay {
+  background-color: var(--pdf-backdrop);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+/* =========================================
+   TOP TOOLBAR
+   ========================================= */
 .pdf-modal-toolbar {
-  height: 60px;
-  min-height: 60px;
-  background-color: #0f172a;
-  border-bottom: 1px solid #1e293b;
+  min-height: 58px;
+  background-color: var(--pdf-toolbar-bg);
+  border-bottom: 1px solid var(--pdf-toolbar-border);
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 20px;
-  color: #f8fafc;
+  padding: 0 16px;
+  color: var(--pdf-toolbar-text);
   user-select: none;
   z-index: 10;
+  flex-shrink: 0;
+  gap: 10px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
 }
 
 .pdf-toolbar-left,
@@ -40,36 +84,37 @@
 .pdf-toolbar-right {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
 }
 
 .pdf-toolbar-file-info {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
 }
 
 .pdf-file-icon {
   color: #ef4444;
   display: flex;
   align-items: center;
+  flex-shrink: 0;
 }
 
 .pdf-file-name {
-  font-size: 0.9rem;
+  font-size: 0.88rem;
   font-weight: 600;
-  color: #f1f5f9;
+  color: var(--pdf-toolbar-text);
   letter-spacing: -0.01em;
-  max-width: 260px;
+  max-width: 220px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
 .pdf-file-badge {
-  font-size: 0.72rem;
-  background-color: rgba(255, 255, 255, 0.1);
-  color: #94a3b8;
+  font-size: 0.7rem;
+  background-color: var(--pdf-control-bg);
+  color: var(--pdf-toolbar-text-muted);
   padding: 2px 7px;
   border-radius: 4px;
   font-weight: 500;
@@ -77,11 +122,11 @@
 
 /* Controls Center */
 .pdf-page-indicator {
-  font-size: 0.82rem;
-  color: #94a3b8;
+  font-size: 0.8rem;
+  color: var(--pdf-toolbar-text-muted);
   font-weight: 500;
-  background-color: #1e293b;
-  padding: 4px 10px;
+  background-color: var(--pdf-control-bg);
+  padding: 5px 10px;
   border-radius: 6px;
   display: flex;
   align-items: center;
@@ -91,7 +136,7 @@
 .pdf-zoom-controls {
   display: flex;
   align-items: center;
-  background-color: #1e293b;
+  background-color: var(--pdf-control-bg);
   border-radius: 6px;
   padding: 2px;
 }
@@ -99,7 +144,7 @@
 .pdf-tool-btn {
   background: transparent;
   border: none;
-  color: #cbd5e1;
+  color: var(--pdf-toolbar-text-muted);
   padding: 6px 8px;
   border-radius: 4px;
   cursor: pointer;
@@ -107,26 +152,28 @@
   align-items: center;
   justify-content: center;
   transition: all 0.15s ease;
+  min-width: 32px;
+  min-height: 32px;
 }
 
 .pdf-tool-btn:hover {
-  background-color: rgba(255, 255, 255, 0.1);
-  color: #ffffff;
+  background-color: var(--pdf-control-hover);
+  color: var(--pdf-toolbar-text);
 }
 
 .pdf-zoom-val {
   font-size: 0.8rem;
   font-weight: 600;
-  color: #e2e8f0;
-  padding: 0 8px;
-  min-width: 46px;
+  color: var(--pdf-toolbar-text);
+  padding: 0 6px;
+  min-width: 44px;
   text-align: center;
 }
 
 /* Language switch */
 .pdf-lang-switch {
   display: flex;
-  background-color: #1e293b;
+  background-color: var(--pdf-control-bg);
   border-radius: 6px;
   padding: 2px;
 }
@@ -134,19 +181,24 @@
 .pdf-lang-btn {
   border: none;
   background: transparent;
-  color: #94a3b8;
+  color: var(--pdf-toolbar-text-muted);
   padding: 4px 10px;
   font-size: 0.75rem;
   font-weight: 600;
   border-radius: 4px;
   cursor: pointer;
   transition: all 0.15s;
+  min-height: 28px;
 }
 
 .pdf-lang-btn.active {
-  background-color: #2563eb;
+  background-color: #003366;
   color: #ffffff;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+.theme-dark .pdf-lang-btn.active {
+  background-color: #2563eb;
 }
 
 /* Action buttons Right */
@@ -154,42 +206,42 @@
   display: flex;
   align-items: center;
   gap: 6px;
-  background-color: #1e293b;
-  color: #f1f5f9;
-  border: 1px solid #334155;
-  padding: 7px 14px;
+  background-color: var(--pdf-btn-print-bg);
+  color: var(--pdf-btn-print-text);
+  border: 1px solid var(--pdf-btn-print-border);
+  padding: 7px 13px;
   border-radius: 6px;
   font-size: 0.82rem;
   font-weight: 500;
   cursor: pointer;
   transition: all 0.15s;
+  min-height: 34px;
 }
 
 .pdf-action-btn-print:hover {
-  background-color: #334155;
-  border-color: #475569;
+  opacity: 0.85;
 }
 
 .pdf-action-btn-download {
   display: flex;
   align-items: center;
   gap: 6px;
-  background: linear-gradient(135deg, #0284c7, #2563eb);
+  background: var(--pdf-btn-download-bg);
   color: #ffffff;
   border: none;
-  padding: 7px 16px;
+  padding: 7px 15px;
   border-radius: 6px;
   font-size: 0.82rem;
   font-weight: 600;
   cursor: pointer;
-  box-shadow: 0 2px 6px rgba(37, 99, 235, 0.35);
+  box-shadow: 0 2px 6px rgba(0, 51, 102, 0.25);
   transition: all 0.15s;
+  min-height: 34px;
 }
 
 .pdf-action-btn-download:hover:not(:disabled) {
   opacity: 0.92;
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.45);
 }
 
 .pdf-action-btn-download:disabled {
@@ -200,7 +252,7 @@
 .pdf-close-btn {
   background: transparent;
   border: none;
-  color: #94a3b8;
+  color: var(--pdf-toolbar-text-muted);
   cursor: pointer;
   padding: 6px;
   border-radius: 6px;
@@ -208,6 +260,8 @@
   align-items: center;
   justify-content: center;
   transition: all 0.15s;
+  min-width: 34px;
+  min-height: 34px;
 }
 
 .pdf-close-btn:hover {
@@ -215,40 +269,43 @@
   color: #ef4444;
 }
 
-/* Canvas Area */
+/* =========================================
+   CANVAS AREA & A4 PAPER
+   ========================================= */
 .pdf-modal-canvas {
   flex: 1;
-  background-color: #334155;
+  background-color: var(--pdf-canvas-bg);
   overflow-y: auto;
   overflow-x: auto;
-  padding: 40px 20px;
+  padding: 30px 16px;
   display: flex;
   justify-content: center;
   align-items: flex-start;
+  -webkit-overflow-scrolling: touch;
 }
 
 .pdf-canvas-inner {
-  transition: transform 0.15s ease-out;
-  transform-origin: top center;
+  transition: width 0.15s ease-out, height 0.15s ease-out;
+  position: relative;
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  margin: 0 auto;
 }
 
-/* A4 Sheet */
+/* A4 Sheet - Always pristine white print surface */
 .pdf-paper-document {
-  width: 210mm;
-  min-height: 297mm;
+  width: 794px;
+  min-height: 1123px;
   background-color: #ffffff;
   color: #0f172a;
-  box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(0, 0, 0, 0.05);
-  border-radius: 3px;
-  padding: 16mm 18mm;
+  box-shadow: 0 15px 35px -10px rgba(0, 0, 0, 0.35), 0 0 0 1px rgba(0, 0, 0, 0.08);
+  border-radius: 4px;
+  padding: 48px 52px;
   box-sizing: border-box;
-  font-family: 'IBM Plex Sans Thai', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   display: flex;
   flex-direction: column;
   position: relative;
+  transition: transform 0.15s ease-out;
 }
 
 /* Document Header */
@@ -259,6 +316,7 @@
   padding-bottom: 16px;
   border-bottom: 2px solid #003366;
   margin-bottom: 16px;
+  gap: 16px;
 }
 
 .pdf-doc-brand {
@@ -310,7 +368,7 @@
   font-weight: 700;
   color: #0f172a;
   margin: 0;
-  line-height: 1.2;
+  line-height: 1.25;
 }
 
 .pdf-doc-subtitle {
@@ -329,7 +387,8 @@
   font-size: 0.72rem;
   line-height: 1.4;
   color: #475569;
-  min-width: 190px;
+  min-width: 195px;
+  flex-shrink: 0;
 }
 
 .pdf-meta-row {
@@ -548,6 +607,7 @@
   width: 8px;
   height: 8px;
   border-radius: 2px;
+  flex-shrink: 0;
 }
 
 .pdf-cat-amount {
@@ -819,7 +879,95 @@
   border-top: 1px solid #f1f5f9;
 }
 
-/* PRINT MEDIA QUERIES */
+/* =========================================
+   RESPONSIVE DESIGN (TABLETS & PHONES)
+   ========================================= */
+
+@media (max-width: 768px) {
+  .pdf-modal-toolbar {
+    padding: 0 10px;
+    gap: 6px;
+  }
+
+  .pdf-file-badge {
+    display: none;
+  }
+
+  .pdf-file-name {
+    max-width: 110px;
+    font-size: 0.8rem;
+  }
+
+  .pdf-page-indicator {
+    display: none;
+  }
+
+  .pdf-action-btn-print span {
+    display: none;
+  }
+
+  .pdf-action-btn-print {
+    padding: 6px 10px;
+  }
+
+  .pdf-action-btn-download span {
+    font-size: 0.75rem;
+  }
+
+  .pdf-action-btn-download {
+    padding: 6px 10px;
+  }
+
+  .pdf-modal-canvas {
+    padding: 16px 8px;
+  }
+}
+
+@media (max-width: 480px) {
+  .pdf-toolbar-left {
+    gap: 6px;
+  }
+
+  .pdf-file-name {
+    max-width: 85px;
+    font-size: 0.75rem;
+  }
+
+  .pdf-zoom-val {
+    min-width: 36px;
+    font-size: 0.72rem;
+    padding: 0 2px;
+  }
+
+  .pdf-tool-btn {
+    padding: 4px;
+    min-width: 26px;
+    min-height: 26px;
+  }
+
+  .pdf-lang-btn {
+    padding: 3px 6px;
+    font-size: 0.7rem;
+  }
+
+  .pdf-action-btn-download {
+    padding: 6px 8px;
+  }
+
+  .pdf-action-btn-download span {
+    display: none;
+  }
+
+  .pdf-close-btn {
+    min-width: 28px;
+    min-height: 28px;
+    padding: 4px;
+  }
+}
+
+/* =========================================
+   PRINT MEDIA QUERIES (A4 NATIVE)
+   ========================================= */
 @media print {
   body * {
     visibility: hidden;
@@ -850,6 +998,8 @@
   }
 
   .pdf-canvas-inner {
+    width: 100% !important;
+    min-height: 100% !important;
     transform: none !important;
   }
 
@@ -862,6 +1012,7 @@
     box-shadow: none !important;
     border-radius: 0 !important;
     padding: 10mm 12mm !important;
+    transform: none !important;
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
   }

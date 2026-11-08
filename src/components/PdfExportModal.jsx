@@ -1,4 +1,4 @@
-import { useState, useRef, useMemo } from 'react';
+import { useState, useRef, useMemo, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import QRCode from 'react-qr-code';
 import { 
@@ -20,6 +20,7 @@ import {
 import Logo from './Logo';
 import { generatePdfReport } from '../utils/generatePdfReport';
 import { notifyUser } from '../utils/notifications';
+import { useTheme } from '../contexts/ThemeContext';
 import '../styles/pdfExportModal.css';
 
 // Month lookup arrays
@@ -36,10 +37,32 @@ const PdfExportModal = ({
   initialLang = 'th',
   user = {}
 }) => {
+  const { isDarkMode } = useTheme();
   const [lang, setLang] = useState(initialLang);
-  const [zoom, setZoom] = useState(1.0);
+
+  // Responsive initial fit zoom based on device screen
+  const getFitZoom = () => {
+    if (typeof window === 'undefined') return 1.0;
+    const padding = window.innerWidth < 640 ? 20 : window.innerWidth < 1024 ? 36 : 48;
+    const availableWidth = window.innerWidth - padding;
+    const a4PixelWidth = 794; // approx 210mm at 96dpi
+    const calculated = availableWidth / a4PixelWidth;
+    return Math.min(1.05, Math.max(0.35, Math.round(calculated * 100) / 100));
+  };
+
+  const [zoom, setZoom] = useState(() => getFitZoom());
   const [isGenerating, setIsGenerating] = useState(false);
   const qrRef = useRef(null);
+
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth < 768) {
+        setZoom(getFitZoom());
+      }
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   // Calculations
   const {
@@ -176,8 +199,8 @@ const PdfExportModal = ({
 
   // Zoom handlers
   const handleZoomIn = () => setZoom((prev) => Math.min(1.4, Math.round((prev + 0.1) * 10) / 10));
-  const handleZoomOut = () => setZoom((prev) => Math.max(0.6, Math.round((prev - 0.1) * 10) / 10));
-  const handleZoomReset = () => setZoom(1.0);
+  const handleZoomOut = () => setZoom((prev) => Math.max(0.35, Math.round((prev - 0.1) * 10) / 10));
+  const handleZoomReset = () => setZoom(getFitZoom());
 
   // Print handler
   const handlePrint = () => {
@@ -249,7 +272,7 @@ const PdfExportModal = ({
   const verificationUrl = `${window.location.origin}/history?verify=${docNo}`;
 
   return createPortal(
-    <div className="pdf-modal-overlay">
+    <div className={`pdf-modal-overlay ${isDarkMode ? 'theme-dark' : 'theme-light'}`}>
       {/* Top Action Toolbar */}
       <div className="pdf-modal-toolbar">
         {/* Left: Document Info */}
@@ -352,9 +375,18 @@ const PdfExportModal = ({
       <div className="pdf-modal-canvas">
         <div
           className="pdf-canvas-inner"
-          style={{ transform: `scale(${zoom})` }}
+          style={{
+            width: `${Math.round(794 * zoom)}px`,
+            minHeight: `${Math.round(1123 * zoom)}px`
+          }}
         >
-          <div className="pdf-paper-document">
+          <div
+            className="pdf-paper-document"
+            style={{
+              transform: `scale(${zoom})`,
+              transformOrigin: 'top left'
+            }}
+          >
             {/* 1. Header */}
             <div className="pdf-doc-header">
               <div>

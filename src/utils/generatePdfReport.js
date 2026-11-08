@@ -53,6 +53,29 @@ const drawVectorQrCode = (doc, text, x, y, size) => {
 };
 
 /**
+ * Helper to construct the dynamic verification URL with active filter parameters
+ */
+export const buildVerificationUrl = ({
+  docNo = '',
+  filterMonth = 'all',
+  filterDate = '',
+  filterCategory = 'all'
+}) => {
+  const originUrl = typeof window !== 'undefined' && window.location.origin
+    ? window.location.origin
+    : 'https://fintrack.app';
+
+  const params = new URLSearchParams();
+  if (docNo) params.set('verify', docNo);
+  if (filterMonth && filterMonth !== 'all') params.set('month', filterMonth);
+  if (filterDate) params.set('date', filterDate);
+  if (filterCategory && filterCategory !== 'all') params.set('category', filterCategory);
+
+  const query = params.toString();
+  return `${originUrl}/history${query ? `?${query}` : ''}`;
+};
+
+/**
  * Generate redesigned FinTrack financial PDF statement
  * Matching Stitch Screen ea98adc06bd94f0fb03468d24837f7a8
  */
@@ -555,11 +578,8 @@ export const generatePdfReport = async ({
   doc.setLineWidth(0.3);
   doc.roundedRect(verifyX, signAreaY, verifyW, verifyH, 2, 2, 'FD');
 
-  // Direct scannable QR Code pointing to /history?verify=DOC_NO
-  const originUrl = typeof window !== 'undefined' && window.location.origin
-    ? window.location.origin
-    : 'https://fintrack.app';
-  const qrTargetUrl = `${originUrl}/history?verify=${encodeURIComponent(docNo)}`;
+  // Direct scannable QR Code pointing to /history?verify=DOC_NO with report filter parameters
+  const qrTargetUrl = buildVerificationUrl({ docNo, filterMonth, filterDate, filterCategory });
 
   if (qrDataUrl) {
     try {

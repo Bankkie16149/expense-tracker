@@ -18,7 +18,7 @@ import {
   Loader2
 } from 'lucide-react';
 import Logo from './Logo';
-import { generatePdfReport } from '../utils/generatePdfReport';
+import { generatePdfReport, buildVerificationUrl } from '../utils/generatePdfReport';
 import { generateSignatureImage } from '../utils/signatureGenerator';
 import { notifyUser } from '../utils/notifications';
 import { useTheme } from '../contexts/ThemeContext';
@@ -198,7 +198,10 @@ const PdfExportModal = ({
   const userName = user?.name || user?.email || (lang === 'th' ? 'ผู้ใช้งาน FinTrack' : 'FinTrack User');
   const customAppName = user?.customAppName || 'FinTrack';
   const isPro = !!user?.isPro;
-  const verificationUrl = `${window.location.origin}/history?verify=${docNo}`;
+  const verificationUrl = useMemo(
+    () => buildVerificationUrl({ docNo, filterMonth, filterDate, filterCategory }),
+    [docNo, filterMonth, filterDate, filterCategory]
+  );
   const signatureDataUrl = useMemo(() => generateSignatureImage(userName), [userName]);
 
   // Zoom handlers

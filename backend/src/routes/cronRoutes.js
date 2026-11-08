@@ -19,6 +19,12 @@ const verifyCronSecret = (req, res, next) => {
 router.get('/monthly-summary', verifyCronSecret, async (req, res) => {
   try {
     const result = await sendMonthlySummaryEmails();
+    if (!result.success) {
+      return res.status(500).json({
+        message: 'Failed to send monthly summary emails',
+        ...result
+      });
+    }
     res.json({
       message: 'Monthly summary emails sent successfully',
       ...result

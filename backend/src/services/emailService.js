@@ -20,9 +20,9 @@ const sendEmail = async (to, subject, text, html) => {
   try {
     const brevoApiKey = process.env.BREVO_API_KEY;
 
-    // 1. Primary: Brevo REST API (HTTPS Port 443 - works everywhere, sends to ANY recipient without custom domain)
+    // 1. Primary: Brevo REST API (HTTPS Port 443)
     if (brevoApiKey) {
-      const senderEmail = process.env.BREVO_SENDER_EMAIL || process.env.SMTP_USER;
+      const senderEmail = process.env.BREVO_SENDER_EMAIL || process.env.SMTP_USER || 'hoing11111@gmail.com';
       const formattedHtml = html || `<div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; line-height: 1.6; white-space: pre-wrap; color: #334155;">${text}</div>`;
 
       const response = await axios.post(
@@ -45,7 +45,7 @@ const sendEmail = async (to, subject, text, html) => {
       );
 
       const messageId = response.data?.messageId;
-      console.log('Email sent via Brevo successfully:', messageId);
+      console.log(`Email sent via Brevo to ${to} successfully:`, messageId);
       return { success: true, messageId, provider: 'brevo' };
     }
 
@@ -60,20 +60,17 @@ const sendEmail = async (to, subject, text, html) => {
         html,
       });
 
-      console.log('Email sent via SMTP successfully: %s', info.messageId);
+      console.log(`Email sent via SMTP to ${to} successfully: %s`, info.messageId);
       return { success: true, messageId: info.messageId, provider: 'smtp' };
     }
 
-    // 3. Fallback: Mock mode
-    console.log('--- EMAIL MOCK ---');
-    console.log(`To: ${to}`);
-    console.log(`Subject: ${subject}`);
-    console.log(`Content: ${text}`);
-    console.log('--- END EMAIL ---');
-    return { success: true, mock: true };
+    // 3. Neither is configured: Report clear error (NO fake mock success!)
+    const errorMsg = 'No email service configured. Please set BREVO_API_KEY in Render Environment variables.';
+    console.error(errorMsg);
+    return { success: false, error: errorMsg };
   } catch (error) {
     const errData = error.response?.data || error.message || error;
-    console.error('Error sending email:', errData);
+    console.error(`Error sending email to ${to}:`, errData);
     return { success: false, error: errData };
   }
 };

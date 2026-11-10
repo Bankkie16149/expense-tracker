@@ -7,9 +7,15 @@ const { NodeSDK } = require('@opentelemetry/sdk-node');
 const { getNodeAutoInstrumentations } = require('@opentelemetry/auto-instrumentations-node');
 const { resourceFromAttributes } = require('@opentelemetry/resources');
 const { ATTR_SERVICE_NAME, ATTR_SERVICE_VERSION } = require('@opentelemetry/semantic-conventions');
-const { OTLPTraceExporter } = require('@opentelemetry/exporter-trace-otlp-http');
-const { OTLPMetricExporter } = require('@opentelemetry/exporter-metrics-otlp-http');
+const { OTLPTraceExporter } = require('@opentelemetry/exporter-trace-otlp-proto');
+const { OTLPMetricExporter } = require('@opentelemetry/exporter-metrics-otlp-proto');
 const { PeriodicExportingMetricReader } = require('@opentelemetry/sdk-metrics');
+const opentelemetry = require('@opentelemetry/api');
+
+// Ensure BatchSpanProcessor flushes rapidly (every 1s instead of 5s) for instant visibility
+if (!process.env.OTEL_BSP_SCHEDULE_DELAY) {
+  process.env.OTEL_BSP_SCHEDULE_DELAY = '1000';
+}
 
 // Determine OTLP endpoint and authentication
 const otlpEndpoint = process.env.OTEL_EXPORTER_OTLP_ENDPOINT || process.env.GRAFANA_OTLP_ENDPOINT;
@@ -80,6 +86,27 @@ if (isTelemetryEnabled) {
 
     sdk.start();
     console.log(`[Telemetry] 🚀 OpenTelemetry initialized. Streaming metrics & traces to Grafana Cloud (${cleanEndpoint})`);
+
+    // Send immediate and periodic heartbeat traces so Grafana Cloud detects active signals continuously
+    const sendHeartbeat = () => {
+      try {
+        const tracer = opentelemetry.trace.getTracer('fintrack-backend');
+        const span = tracer.startSpan('heartbeat', {
+          attributes: {
+            'service.name': serviceName,
+            'app.status': 'online',
+            'deployment.environment': environment
+          }
+        });
+        span.end();
+      } catch (e) {
+        // Ignore trace errors
+      }
+    };
+
+    setTimeout(sendHeartbeat, 500);
+    const heartbeatTimer = setInterval(sendHeartbeat, 5000);
+    heartbeatTimer.unref();
 
     // Graceful shutdown
     const gracefulShutdown = () => {

@@ -1,4 +1,5 @@
 const prisma = require('../db/prisma');
+const logger = require('../logger');
 
 const auditMiddleware = (req, res, next) => {
   res.on('finish', () => {
@@ -37,7 +38,13 @@ const auditMiddleware = (req, res, next) => {
         bodyStr = ` | Data: ${JSON.stringify(safeBody)}`;
       }
 
-      console.log(`[AUDIT] ${status} | ${action} ${url} | ${finalUserStr}${bodyStr}`);
+      const message = `[AUDIT] ${status} | ${action} ${url} | ${finalUserStr}${bodyStr}`;
+      logger.audit(message, {
+        httpStatus: status,
+        httpMethod: method,
+        route: url,
+        user: finalUserStr
+      });
     };
 
     // Attempt to identify user by querying the database asynchronously

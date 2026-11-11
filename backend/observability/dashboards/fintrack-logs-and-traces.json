@@ -1,0 +1,77 @@
+{
+  "annotations": {
+    "list": []
+  },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "id": null,
+  "links": [],
+  "liveNow": true,
+  "panels": [
+    {
+      "id": 1,
+      "type": "logs",
+      "title": "FinTrack Application & Audit Logs (Click a log line to follow trace_id)",
+      "gridPos": { "x": 0, "y": 0, "w": 24, "h": 16 },
+      "datasource": { "type": "loki", "uid": "grafanacloud-nimblewardrobe3575-logs" },
+      "targets": [
+        {
+          "expr": "{app=\"fintrack-backend\"} |~ \"$level\"",
+          "legendFormat": "",
+          "refId": "A"
+        }
+      ],
+      "options": {
+        "showTime": true,
+        "showLabels": true,
+        "wrapLogMessage": true,
+        "sortOrder": "Descending",
+        "enableLogDetails": true,
+        "dedupStrategy": "none"
+      }
+    },
+    {
+      "id": 2,
+      "type": "text",
+      "title": "Trace & Audit Investigation (DevOps Guide)",
+      "gridPos": { "x": 0, "y": 16, "w": 24, "h": 5 },
+      "options": {
+        "mode": "markdown",
+        "content": "### 🔍 วิธีสืบค้น Logs และ Traces เชื่อมโยงกัน (Correlated Observability)\n1. ทุก Log ที่บันทึกผ่าน `logger.audit` หรือ `logger.error` จะถูกผูกกับ **`trace_id`** และ **`span_id`** อัตโนมัติจาก OpenTelemetry\n2. คุณสามารถคลิกที่บรรทัด Log ด้านบนเพื่อดูรายละเอียด และคัดลอก `trace_id` ไปวางค้นหาต่อใน **Explore → Tempo (Traces)** ได้ทันที\n3. ค้นหา Trace ด้วย Query: `{resource.service.name=\"fintrack-backend\"}` เพื่อดูจังหวะเวลาของ API และ Database queries แบบละเอียดยิบ"
+      }
+    }
+  ],
+  "refresh": "10s",
+  "schemaVersion": 39,
+  "tags": ["fintrack", "loki", "devops", "logs"],
+  "templating": {
+    "list": [
+      {
+        "name": "level",
+        "type": "custom",
+        "label": "Log Level",
+        "query": ".*,INFO,WARN,ERROR,audit",
+        "current": { "text": "All", "value": ".*" },
+        "options": [
+          { "text": "All Levels", "value": ".*", "selected": true },
+          { "text": "ERROR", "value": "ERROR", "selected": false },
+          { "text": "WARN", "value": "WARN", "selected": false },
+          { "text": "INFO", "value": "INFO", "selected": false },
+          { "text": "AUDIT", "value": "AUDIT", "selected": false }
+        ]
+      }
+    ]
+  },
+  "time": {
+    "from": "now-1h",
+    "to": "now"
+  },
+  "timepicker": {
+    "refresh_intervals": ["5s", "10s", "30s", "1m", "5m"]
+  },
+  "timezone": "browser",
+  "title": "FinTrack Logs & Traces (DevOps)",
+  "uid": "fintrack-logs-traces",
+  "version": 1
+}

@@ -1,0 +1,57 @@
+// Grafana Alloy Configuration for FinTrack
+// Collects application logs and forwards them to Grafana Cloud Loki
+
+local.file_match "fintrack_logs" {
+  path_targets = [{
+    __path__ = "/var/log/fintrack/*.log",
+    job      = "fintrack-backend",
+    service  = "fintrack-backend",
+  }]
+}
+
+loki.source.file "fintrack_logs" {
+  targets       = local.file_match.fintrack_logs.targets
+  forward_to    = [loki.process.fintrack_logs.receiver]
+  tail_from_end = false
+}
+
+loki.process "fintrack_logs" {
+  forward_to = [loki.write.grafana_cloud.receiver]
+
+  // Parse JSON logs containing level, timestamp, and OpenTelemetry traceId
+  stage.json {
+    expressions = {
+      level     = "level",
+      message   = "message",
+      trace_id  = "trace_id",
+      span_id   = "span_id",
+      user      = "user"
+    }
+  }
+
+  stage.labels {
+    values = {
+      level    = "level",
+      service  = "fintrack-backend"
+    }
+  }
+
+  stage.structured_metadata {
+    values = {
+      trace_id = "trace_id",
+      span_id  = "span_id"
+    }
+  }
+}
+
+// Forward to Grafana Cloud Loki
+loki.write "grafana_cloud" {
+  endpoint {
+    url = sys.env("GRAFANA_LOKI_URL")
+
+    basic_auth {
+      username = sys.env("GRAFANA_LOKI_USER")
+      password = sys.env("GRAFANA_LOKI_TOKEN")
+    }
+  }
+}

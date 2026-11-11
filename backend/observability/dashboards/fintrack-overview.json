@@ -51,13 +51,13 @@
     {
       "id": 2,
       "type": "stat",
-      "title": "HTTP Requests / Second",
+      "title": "HTTP Requests (Last 5m)",
       "gridPos": { "x": 6, "y": 0, "w": 6, "h": 4 },
       "datasource": { "type": "prometheus", "uid": "grafanacloud-prom" },
       "targets": [
         {
-          "expr": "sum(rate(http_server_request_duration_seconds_count{service_name=\"fintrack-backend\"}[5m])) or vector(0)",
-          "legendFormat": "RPS",
+          "expr": "round(sum(increase(http_server_request_duration_seconds_count{service_name=\"fintrack-backend\"}[5m])) or vector(0))",
+          "legendFormat": "Requests",
           "refId": "A"
         }
       ],
@@ -68,8 +68,8 @@
       },
       "fieldConfig": {
         "defaults": {
-          "unit": "reqps",
-          "decimals": 2,
+          "unit": "short",
+          "decimals": 0,
           "color": { "mode": "palette-classic" }
         }
       }
@@ -255,5 +255,5 @@
   "timezone": "browser",
   "title": "FinTrack System Overview (DevOps)",
   "uid": "fintrack-devops-overview",
-  "version": 2
+  "version": 3
 }

@@ -14,7 +14,7 @@
       "type": "stat",
       "title": "Backend Service Status",
       "gridPos": { "x": 0, "y": 0, "w": 6, "h": 4 },
-      "datasource": { "type": "prometheus", "uid": "grafanacloud-nimblewardrobe3575-prom" },
+      "datasource": { "type": "prometheus", "uid": "grafanacloud-prom" },
       "targets": [
         {
           "expr": "count(http_server_request_duration_seconds_count{service_name=\"fintrack-backend\"}) > bool 0",
@@ -53,10 +53,10 @@
       "type": "stat",
       "title": "HTTP Requests / Second",
       "gridPos": { "x": 6, "y": 0, "w": 6, "h": 4 },
-      "datasource": { "type": "prometheus", "uid": "grafanacloud-nimblewardrobe3575-prom" },
+      "datasource": { "type": "prometheus", "uid": "grafanacloud-prom" },
       "targets": [
         {
-          "expr": "sum(rate(http_server_request_duration_seconds_count{service_name=\"fintrack-backend\"}[1m]))",
+          "expr": "sum(rate(http_server_request_duration_seconds_count{service_name=\"fintrack-backend\"}[5m])) or vector(0)",
           "legendFormat": "RPS",
           "refId": "A"
         }
@@ -79,10 +79,10 @@
       "type": "stat",
       "title": "Avg Response Latency",
       "gridPos": { "x": 12, "y": 0, "w": 6, "h": 4 },
-      "datasource": { "type": "prometheus", "uid": "grafanacloud-nimblewardrobe3575-prom" },
+      "datasource": { "type": "prometheus", "uid": "grafanacloud-prom" },
       "targets": [
         {
-          "expr": "sum(rate(http_server_request_duration_seconds_sum{service_name=\"fintrack-backend\"}[1m])) / clamp_min(sum(rate(http_server_request_duration_seconds_count{service_name=\"fintrack-backend\"}[1m])), 0.001)",
+          "expr": "sum(rate(http_server_request_duration_seconds_sum{service_name=\"fintrack-backend\"}[5m])) / clamp_min(sum(rate(http_server_request_duration_seconds_count{service_name=\"fintrack-backend\"}[5m])), 0.001)",
           "legendFormat": "Latency",
           "refId": "A"
         }
@@ -112,10 +112,10 @@
       "type": "stat",
       "title": "Error Rate (4xx / 5xx)",
       "gridPos": { "x": 18, "y": 0, "w": 6, "h": 4 },
-      "datasource": { "type": "prometheus", "uid": "grafanacloud-nimblewardrobe3575-prom" },
+      "datasource": { "type": "prometheus", "uid": "grafanacloud-prom" },
       "targets": [
         {
-          "expr": "sum(rate(http_server_request_duration_seconds_count{service_name=\"fintrack-backend\", http_response_status_code=~\"[45]..\"}[1m])) / clamp_min(sum(rate(http_server_request_duration_seconds_count{service_name=\"fintrack-backend\"}[1m])), 0.001)",
+          "expr": "(sum(rate(http_server_request_duration_seconds_count{service_name=\"fintrack-backend\", http_response_status_code=~\"[45]..\"}[5m])) or vector(0)) / clamp_min(sum(rate(http_server_request_duration_seconds_count{service_name=\"fintrack-backend\"}[5m])), 1)",
           "legendFormat": "Error %",
           "refId": "A"
         }
@@ -145,10 +145,10 @@
       "type": "timeseries",
       "title": "Request Rate by Route & Status",
       "gridPos": { "x": 0, "y": 4, "w": 12, "h": 8 },
-      "datasource": { "type": "prometheus", "uid": "grafanacloud-nimblewardrobe3575-prom" },
+      "datasource": { "type": "prometheus", "uid": "grafanacloud-prom" },
       "targets": [
         {
-          "expr": "sum by (http_route, http_response_status_code) (rate(http_server_request_duration_seconds_count{service_name=\"fintrack-backend\"}[1m]))",
+          "expr": "sum by (http_route, http_response_status_code) (rate(http_server_request_duration_seconds_count{service_name=\"fintrack-backend\"}[5m]))",
           "legendFormat": "{{http_route}} [{{http_response_status_code}}]",
           "refId": "A"
         }
@@ -169,15 +169,15 @@
       "type": "timeseries",
       "title": "Response Latency Distribution (p95 & p50)",
       "gridPos": { "x": 12, "y": 4, "w": 12, "h": 8 },
-      "datasource": { "type": "prometheus", "uid": "grafanacloud-nimblewardrobe3575-prom" },
+      "datasource": { "type": "prometheus", "uid": "grafanacloud-prom" },
       "targets": [
         {
-          "expr": "histogram_quantile(0.95, sum by (le) (rate(http_server_request_duration_seconds_bucket{service_name=\"fintrack-backend\"}[1m])))",
+          "expr": "histogram_quantile(0.95, sum by (le) (rate(http_server_request_duration_seconds_bucket{service_name=\"fintrack-backend\"}[5m])))",
           "legendFormat": "p95 Latency",
           "refId": "A"
         },
         {
-          "expr": "histogram_quantile(0.50, sum by (le) (rate(http_server_request_duration_seconds_bucket{service_name=\"fintrack-backend\"}[1m])))",
+          "expr": "histogram_quantile(0.50, sum by (le) (rate(http_server_request_duration_seconds_bucket{service_name=\"fintrack-backend\"}[5m])))",
           "legendFormat": "p50 Latency (Median)",
           "refId": "B"
         }
@@ -198,10 +198,10 @@
       "type": "timeseries",
       "title": "HTTP Status Code Breakdown",
       "gridPos": { "x": 0, "y": 12, "w": 12, "h": 7 },
-      "datasource": { "type": "prometheus", "uid": "grafanacloud-nimblewardrobe3575-prom" },
+      "datasource": { "type": "prometheus", "uid": "grafanacloud-prom" },
       "targets": [
         {
-          "expr": "sum by (http_response_status_code) (rate(http_server_request_duration_seconds_count{service_name=\"fintrack-backend\"}[1m]))",
+          "expr": "sum by (http_response_status_code) (rate(http_server_request_duration_seconds_count{service_name=\"fintrack-backend\"}[5m]))",
           "legendFormat": "HTTP {{http_response_status_code}}",
           "refId": "A"
         }
@@ -222,10 +222,10 @@
       "type": "timeseries",
       "title": "Grafana OTLP Gateway Connection Latency",
       "gridPos": { "x": 12, "y": 12, "w": 12, "h": 7 },
-      "datasource": { "type": "prometheus", "uid": "grafanacloud-nimblewardrobe3575-prom" },
+      "datasource": { "type": "prometheus", "uid": "grafanacloud-prom" },
       "targets": [
         {
-          "expr": "histogram_quantile(0.95, sum by (le) (rate(http_client_request_duration_seconds_bucket{service_name=\"fintrack-backend\"}[1m])))",
+          "expr": "histogram_quantile(0.95, sum by (le) (rate(http_client_request_duration_seconds_bucket{service_name=\"fintrack-backend\"}[5m])))",
           "legendFormat": "OTLP Gateway p95",
           "refId": "A"
         }
@@ -255,5 +255,5 @@
   "timezone": "browser",
   "title": "FinTrack System Overview (DevOps)",
   "uid": "fintrack-devops-overview",
-  "version": 1
+  "version": 2
 }

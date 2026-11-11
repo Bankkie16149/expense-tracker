@@ -14,7 +14,7 @@
       "type": "logs",
       "title": "FinTrack Application & Audit Logs (Click a log line to follow trace_id)",
       "gridPos": { "x": 0, "y": 0, "w": 24, "h": 16 },
-      "datasource": { "type": "loki", "uid": "grafanacloud-nimblewardrobe3575-logs" },
+      "datasource": { "type": "loki", "uid": "grafanacloud-logs" },
       "targets": [
         {
           "expr": "{app=\"fintrack-backend\"} |~ \"$level\"",
@@ -72,6 +72,6 @@
   },
   "timezone": "browser",
   "title": "FinTrack Logs & Traces (DevOps)",
-  "uid": "fintrack-logs-traces",
-  "version": 1
+  "uid": "fintrack-logs-and-traces",
+  "version": 2
 }

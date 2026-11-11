@@ -1,9 +1,15 @@
+// Initialize OpenTelemetry first before any other module (required for auto-instrumentation)
+require('./telemetry');
+
 const http = require('http');
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 require('dotenv').config();
+
+const logger = require('./logger');
+const { metricsMiddleware, getMetrics, getContentType } = require('./metrics');
 
 // Fail-safe environment variable checks
 if (!process.env.JWT_SECRET) {
@@ -50,6 +56,20 @@ app.use(cors(corsOptions));
 // Body Parsers
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ limit: '10mb', extended: true }));
+
+// Prometheus HTTP Metrics Middleware
+app.use(metricsMiddleware);
+
+// Prometheus Scrape Endpoint (Exempt from Rate Limiting)
+app.get('/metrics', async (req, res) => {
+  try {
+    res.setHeader('Content-Type', getContentType());
+    res.send(await getMetrics());
+  } catch (err) {
+    logger.error(`Failed to collect Prometheus metrics: ${err.message}`, { stack: err.stack });
+    res.status(500).send('Error generating metrics');
+  }
+});
 
 // Cron Webhook Routes (Exempt from Global Rate Limiting)
 app.use('/api/cron', cronRoutes);
@@ -131,6 +151,12 @@ app.get('/', async (req, res) => {
 // Global Error Handler Middleware
 app.use((err, req, res, next) => {
   const statusCode = res.statusCode !== 200 ? res.statusCode : 500;
+  logger.error(`Unhandled Error [${req.method} ${req.originalUrl}]: ${err.message}`, {
+    stack: err.stack,
+    url: req.originalUrl,
+    method: req.method,
+    statusCode
+  });
   res.status(statusCode).json({
     message: err.message || 'Internal Server Error',
     stack: process.env.NODE_ENV === 'production' ? '🥞' : err.stack,
@@ -141,6 +167,6 @@ app.use((err, req, res, next) => {
 initSocket(server);
 
 server.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
+  logger.info(`Server is running on port ${PORT}`);
   initCronJobs();
 });

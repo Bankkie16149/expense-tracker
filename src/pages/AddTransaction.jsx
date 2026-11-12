@@ -305,7 +305,7 @@ const AddTransaction = () => {
               <textarea className="form-control" rows="3" placeholder={isExpense ? t('descriptionPlaceholderExpense') : t('descriptionPlaceholderIncome')}></textarea>
             </div>
 
-            <div className="flex justify-between items-center mt-6">
+            <div className="form-actions-row">
               <button type="button" className="btn btn-outline" onClick={() => navigate('/dashboard')}>{t('cancel')}</button>
               <button 
                 type="submit" 

@@ -2,6 +2,7 @@ import React from 'react';
 import Logo from './Logo';
 import { useLanguage } from '../contexts/LanguageContext';
 import Swal from 'sweetalert2';
+import { APP_VERSION } from '../utils/version';
 
 const Footer = () => {
   const { language } = useLanguage();
@@ -40,7 +41,7 @@ const Footer = () => {
         </div>
 
         <div className="footer-meta">
-          <span>© {new Date().getFullYear()} FinTrack. {language === 'th' ? 'สงวนลิขสิทธิ์.' : 'All rights reserved.'}</span>
+          <span>© {new Date().getFullYear()} FinTrack ({APP_VERSION}). {language === 'th' ? 'สงวนลิขสิทธิ์.' : 'All rights reserved.'}</span>
           <div className="footer-links">
             <a href="#" onClick={handlePrivacyClick}>Privacy Policy</a>
           </div>

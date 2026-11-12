@@ -342,7 +342,7 @@ const History = () => {
 
         {/* Desktop View: Full Data Table */}
         <div className="table-responsive desktop-table-view">
-          <table className="data-table" style={{ minWidth: '600px' }}>
+          <table className="data-table">
             <thead>
               <tr>
                 <th>{t('transaction')}</th>

@@ -5,9 +5,8 @@ import {
   History as HistoryIcon, 
   Plus, 
   PiggyBank, 
-  Menu,
-  Shield,
-  MessageSquare
+  User,
+  Shield
 } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
 
@@ -90,18 +89,17 @@ const BottomNav = ({ onMenuClick }) => {
         </NavLink>
       )}
 
-      {/* 5. Menu / More */}
-      <button 
-        type="button" 
-        className="bottom-nav-item bottom-nav-menu-btn" 
-        onClick={onMenuClick}
-        aria-label="Open Menu"
+      {/* 5. Profile */}
+      <NavLink 
+        to="/profile" 
+        className={({ isActive }) => `bottom-nav-item ${isActive ? 'active' : ''}`}
+        aria-label="Profile"
       >
         <div className="bottom-nav-icon">
-          <Menu size={20} />
+          <User size={20} />
         </div>
-        <span className="bottom-nav-label">{language === 'th' ? 'เมนู' : 'Menu'}</span>
-      </button>
+        <span className="bottom-nav-label">{language === 'th' ? 'โปรไฟล์' : 'Profile'}</span>
+      </NavLink>
     </nav>
   );
 };

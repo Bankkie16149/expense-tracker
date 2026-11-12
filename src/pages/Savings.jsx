@@ -243,29 +243,29 @@ const Savings = () => {
                   <div key={goal.id} style={{ padding: '1rem', border: '1px solid var(--border)', borderRadius: '12px' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px', marginBottom: '12px' }}>
                       <h4 style={{ margin: 0, wordBreak: 'break-word', flex: '1 1 auto' }}>{goal.name}</h4>
-                      <div style={{ display: 'flex', gap: '8px' }}>
+                      <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
                         <button 
                           className="btn btn-outline" 
-                          style={{ padding: '4px 8px', fontSize: '0.85rem' }}
+                          style={{ minWidth: '40px', minHeight: '40px', padding: '6px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}
                           onClick={() => handleEditGoal(goal)}
                           title={language === 'th' ? 'แก้ไข' : 'Edit'}
                         >
-                          <Edit size={16} />
+                          <Edit size={18} />
                         </button>
                         <button 
                           className="btn btn-outline" 
-                          style={{ padding: '4px 8px', fontSize: '0.85rem', color: 'var(--danger)', borderColor: 'var(--danger)' }}
+                          style={{ minWidth: '40px', minHeight: '40px', padding: '6px', color: 'var(--danger)', borderColor: 'var(--danger)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}
                           onClick={() => handleDeleteGoal(goal.id)}
                           title={language === 'th' ? 'ลบ' : 'Delete'}
                         >
-                          <Trash2 size={16} />
+                          <Trash2 size={18} />
                         </button>
                         <button 
                           className="btn btn-outline" 
-                          style={{ padding: '4px 12px', fontSize: '0.85rem', flexShrink: 0 }}
+                          style={{ minHeight: '40px', padding: '6px 14px', fontSize: '0.9rem', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: '4px', flexShrink: 0 }}
                           onClick={() => handleAddMoney(goal.id, goal.name)}
                         >
-                          <ArrowUpRight size={16} /> {language === 'th' ? 'เพิ่มเงิน' : 'Add'}
+                          <ArrowUpRight size={18} /> {language === 'th' ? 'เพิ่มเงิน' : 'Add'}
                         </button>
                       </div>
                     </div>

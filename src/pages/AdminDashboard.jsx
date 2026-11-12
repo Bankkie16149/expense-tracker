@@ -275,7 +275,7 @@ const AdminDashboard = () => {
             <h1>{language === 'th' ? 'แอดมิน แดชบอร์ด' : 'Admin Dashboard'}</h1>
             <p style={{ color: 'var(--text-muted)' }}>{language === 'th' ? 'จัดการผู้ใช้และดูภาพรวมของระบบ' : 'Manage users and system overview'}</p>
           </div>
-          <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
+          <div className="admin-header-actions">
             <button onClick={() => navigate('/admin/chat')} className="btn btn-outline" style={{ display: 'flex', alignItems: 'center', gap: '8px', border: '1px solid var(--border)', background: 'white' }}>
               <MessageSquare size={18} />
               {language === 'th' ? 'แชทกับผู้ใช้' : 'User Chats'}
@@ -365,17 +365,17 @@ const AdminDashboard = () => {
                     </div>
                     <span style={{ background: '#fef08a', color: '#854d0e', padding: '4px 8px', borderRadius: '4px', fontSize: '0.75rem', fontWeight: 600 }}>Pending</span>
                   </div>
-                  <div style={{ display: 'flex', gap: '8px', alignItems: 'center', justifyContent: 'space-between', paddingTop: '8px', borderTop: '1px solid var(--border)' }}>
+                  <div style={{ display: 'flex', gap: '8px', alignItems: 'center', justifyContent: 'space-between', paddingTop: '8px', borderTop: '1px solid var(--border)', flexWrap: 'wrap' }}>
                     {r.proSlipUrl ? (
-                      <button onClick={() => showSlip(r.proSlipUrl)} className="btn btn-outline" style={{ padding: '6px 12px', fontSize: '0.85rem' }}>
+                      <button onClick={() => showSlip(r.proSlipUrl)} className="btn btn-outline" style={{ padding: '6px 12px', fontSize: '0.85rem', minHeight: '36px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                         View Slip
                       </button>
                     ) : <span style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>No Slip</span>}
-                    <div style={{ display: 'flex', gap: '8px' }}>
-                      <button onClick={() => handleApprovePro(r.id)} style={{ background: '#22c55e', color: '#fff', border: 'none', padding: '6px 14px', borderRadius: '6px', cursor: 'pointer', fontWeight: 600, fontSize: '0.85rem' }}>
+                    <div style={{ display: 'flex', gap: '8px', flex: 1, justifyContent: 'flex-end' }}>
+                      <button onClick={() => handleApprovePro(r.id)} style={{ background: '#22c55e', color: '#fff', border: 'none', padding: '6px 14px', borderRadius: '8px', cursor: 'pointer', fontWeight: 600, fontSize: '0.85rem', minHeight: '36px', flex: 1, maxWidth: '110px' }}>
                         อนุมัติ
                       </button>
-                      <button onClick={() => handleRejectPro(r.id)} style={{ background: '#ef4444', color: '#fff', border: 'none', padding: '6px 14px', borderRadius: '6px', cursor: 'pointer', fontWeight: 600, fontSize: '0.85rem' }}>
+                      <button onClick={() => handleRejectPro(r.id)} style={{ background: '#ef4444', color: '#fff', border: 'none', padding: '6px 14px', borderRadius: '8px', cursor: 'pointer', fontWeight: 600, fontSize: '0.85rem', minHeight: '36px', flex: 1, maxWidth: '110px' }}>
                         ปฏิเสธ
                       </button>
                     </div>
@@ -466,25 +466,25 @@ const AdminDashboard = () => {
                     </div>
                   </div>
 
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '8px', borderTop: '1px solid var(--border)' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '8px', borderTop: '1px solid var(--border)', flexWrap: 'wrap', gap: '8px' }}>
                     <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>ID #{u.id}</span>
                     <div style={{ display: 'flex', gap: '8px' }}>
                       <button 
                         onClick={() => navigate(`/admin/users/${u.id}`)}
-                        style={{ background: 'var(--bg-hover)', color: 'var(--primary-main)', border: 'none', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.8rem', fontWeight: 500 }}
+                        style={{ background: 'var(--bg-hover)', color: 'var(--primary-main)', border: 'none', padding: '6px 12px', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.8rem', fontWeight: 500, minHeight: '36px' }}
                       >
                         <Eye size={16} /> <span>Tx</span>
                       </button>
                       <button 
                         onClick={() => handleEditUser(u)}
-                        style={{ background: 'var(--bg-hover)', color: 'var(--text-main)', border: 'none', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.8rem', fontWeight: 500 }}
+                        style={{ background: 'var(--bg-hover)', color: 'var(--text-main)', border: 'none', padding: '6px 12px', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.8rem', fontWeight: 500, minHeight: '36px' }}
                       >
                         <Edit size={16} /> <span>Edit</span>
                       </button>
                       {!u.isAdmin && (
                         <button 
                           onClick={() => handleDeleteUser(u.id, u.name || u.email)}
-                          style={{ background: 'var(--bg-hover-danger)', color: 'var(--danger)', border: 'none', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.8rem', fontWeight: 500 }}
+                          style={{ background: 'var(--bg-hover-danger)', color: 'var(--danger)', border: 'none', padding: '6px 12px', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.8rem', fontWeight: 500, minHeight: '36px' }}
                         >
                           <Trash2 size={16} /> <span>Del</span>
                         </button>

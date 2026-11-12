@@ -13,15 +13,16 @@ const Savings = () => {
   const [loading, setLoading] = useState(true);
 
   const user = JSON.parse(localStorage.getItem('user') || '{}');
+  const isAuthorized = Boolean(user?.isPro || user?.isAdmin);
 
   useEffect(() => {
-    if (!user.isPro) {
-      // Redirect or show not authorized
+    if (!isAuthorized) {
+      // Redirect unauthorized standard users to dashboard
       window.location.href = '/dashboard';
       return;
     }
     fetchSavingsData();
-  }, [user.isPro]);
+  }, [isAuthorized]);
 
   const fetchSavingsData = async () => {
     try {

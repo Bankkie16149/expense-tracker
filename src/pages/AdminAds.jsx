@@ -234,12 +234,12 @@ export default function AdminAds() {
             <h1>{language === 'th' ? 'จัดการโฆษณา' : 'Ad Management'}</h1>
             <p style={{ color: 'var(--text-muted)' }}>{language === 'th' ? 'สร้างและจัดการป็อปอัพโฆษณา' : 'Create and manage popup advertisements'}</p>
           </div>
-          <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
-            <button onClick={() => navigate('/admin')} className="btn btn-outline" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <div className="admin-ads-header-actions">
+            <button onClick={() => navigate('/admin')} className="btn btn-outline" style={{ display: 'flex', alignItems: 'center', gap: '8px', justifyContent: 'center' }}>
               <ArrowLeft size={18} />
               {language === 'th' ? 'กลับ' : 'Back'}
             </button>
-            <button onClick={handleAddNewClick} className="btn btn-primary" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <button onClick={handleAddNewClick} className="btn btn-primary" style={{ display: 'flex', alignItems: 'center', gap: '8px', justifyContent: 'center' }}>
               {showForm ? <ArrowLeft size={18} /> : <Plus size={18} />}
               {showForm ? (language === 'th' ? 'ยกเลิก' : 'Cancel') : (language === 'th' ? 'เพิ่มโฆษณา' : 'Add Ad')}
             </button>

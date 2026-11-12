@@ -1035,6 +1035,54 @@ body.dark-mode .action-btn-circle {
   }
 }
 
+/* Admin Action Buttons Responsive Layout */
+.admin-header-actions {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.admin-ads-header-actions {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+@media (max-width: 768px) {
+  .admin-header-actions {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.6rem;
+    width: 100% !important;
+  }
+  .admin-header-actions button {
+    width: 100% !important;
+    min-height: 40px !important;
+    justify-content: center !important;
+    font-size: 0.88rem !important;
+    padding: 8px 10px !important;
+  }
+  .admin-header-actions button:last-child {
+    grid-column: span 2;
+    min-height: 42px !important;
+    font-weight: 600;
+  }
+  .admin-ads-header-actions {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.6rem;
+    width: 100% !important;
+  }
+  .admin-ads-header-actions button {
+    width: 100% !important;
+    min-height: 40px !important;
+    justify-content: center !important;
+    font-size: 0.88rem !important;
+  }
+}
+
 /* Lang Toggle */
 .lang-toggle-wrapper {
   display: flex;

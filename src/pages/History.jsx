@@ -5,6 +5,7 @@ import { useTransactions } from '../hooks/useTransactions';
 import { useLanguage } from '../contexts/LanguageContext';
 import { Download, Trash2, History as HistoryIcon, ShieldCheck, FilterX } from 'lucide-react';
 import TransactionRow from '../components/Dashboard/TransactionRow';
+import MobileTransactionCard from '../components/Dashboard/MobileTransactionCard';
 import Swal from 'sweetalert2';
 import CategoryIcon from '../components/CategoryIcon';
 import { fetchWithAuth } from '../utils/api';
@@ -339,7 +340,8 @@ const History = () => {
           </div>
         </div>
 
-        <div className="table-responsive">
+        {/* Desktop View: Full Data Table */}
+        <div className="table-responsive desktop-table-view">
           <table className="data-table" style={{ minWidth: '600px' }}>
             <thead>
               <tr>
@@ -373,6 +375,29 @@ const History = () => {
               )}
             </tbody>
           </table>
+        </div>
+
+        {/* Mobile View: Banking-Style Cards (< 640px) */}
+        <div className="mobile-card-list">
+          {filteredTransactions.map(tItem => (
+            <MobileTransactionCard 
+              key={`mob-hist-${tItem.id}`}
+              icon={<CategoryIcon categoryName={tItem.category?.name || tItem.subtitle} />} 
+              title={tItem.title} 
+              subtitle={tItem.subtitle} 
+              category={tItem.category?.name || tItem.subtitle} 
+              badgeClass={tItem.category?.type === 'income' ? 'badge-income' : 'badge-housing'}
+              badgeStyle={tItem.category?.type === 'income' ? { background: 'rgba(0, 51, 102, 0.1)', color: 'var(--primary-main)' } : {}}
+              date={new Date(tItem.date).toLocaleDateString(t('jan') === 'มกราคม' ? 'th-TH' : 'en-US', { month: 'short', day: 'numeric', year: 'numeric' })} 
+              amount={`${tItem.category?.type === 'expense' ? '-' : '+'}฿${tItem.amount.toLocaleString()}`} 
+              isNegative={tItem.category?.type === 'expense'} 
+            />
+          ))}
+          {!isLoading && filteredTransactions.length === 0 && (
+            <div style={{ textAlign: 'center', padding: '3rem 1rem', color: 'var(--text-muted)' }}>
+              No transactions found for this period.
+            </div>
+          )}
         </div>
       </div>
 

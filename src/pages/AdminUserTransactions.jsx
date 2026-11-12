@@ -237,46 +237,82 @@ const AdminUserTransactions = () => {
             {language === 'th' ? 'ไม่มีรายการธุรกรรม' : 'No transactions found'}
           </p>
         ) : (
-          <div className="table-responsive">
-            <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
-              <thead>
-                <tr style={{ borderBottom: '1px solid var(--border)' }}>
-                  <th style={{ padding: '12px 16px', color: 'var(--text-muted)', fontWeight: 500 }}>Date</th>
-                  <th style={{ padding: '12px 16px', color: 'var(--text-muted)', fontWeight: 500 }}>Title</th>
-                  <th style={{ padding: '12px 16px', color: 'var(--text-muted)', fontWeight: 500 }}>Category</th>
-                  <th style={{ padding: '12px 16px', color: 'var(--text-muted)', fontWeight: 500, textAlign: 'right' }}>Amount</th>
-                  <th style={{ padding: '12px 16px', color: 'var(--text-muted)', fontWeight: 500, textAlign: 'center' }}>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredTransactions.map(tx => (
-                  <tr key={tx.id} style={{ borderBottom: '1px solid var(--border)', transition: 'background-color 0.2s' }} className="table-row-hover">
-                    <td style={{ padding: '16px' }}>
-                      {new Date(tx.date).toLocaleDateString(language === 'th' ? 'th-TH' : 'en-US', { dateStyle: 'medium' })}
-                    </td>
-                    <td style={{ padding: '16px', fontWeight: 500 }}>{tx.title}</td>
-                    <td style={{ padding: '16px' }}>
-                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', background: 'var(--bg-hover)', padding: '4px 10px', borderRadius: '100px', fontSize: '0.85rem' }}>
-                        <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: tx.category.color || 'var(--primary-main)' }}></span>
+          <>
+            {/* Desktop View */}
+            <div className="table-responsive desktop-table-view">
+              <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+                <thead>
+                  <tr style={{ borderBottom: '1px solid var(--border)' }}>
+                    <th style={{ padding: '12px 16px', color: 'var(--text-muted)', fontWeight: 500 }}>Date</th>
+                    <th style={{ padding: '12px 16px', color: 'var(--text-muted)', fontWeight: 500 }}>Title</th>
+                    <th style={{ padding: '12px 16px', color: 'var(--text-muted)', fontWeight: 500 }}>Category</th>
+                    <th style={{ padding: '12px 16px', color: 'var(--text-muted)', fontWeight: 500, textAlign: 'right' }}>Amount</th>
+                    <th style={{ padding: '12px 16px', color: 'var(--text-muted)', fontWeight: 500, textAlign: 'center' }}>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredTransactions.map(tx => (
+                    <tr key={tx.id} style={{ borderBottom: '1px solid var(--border)', transition: 'background-color 0.2s' }} className="table-row-hover">
+                      <td style={{ padding: '16px' }}>
+                        {new Date(tx.date).toLocaleDateString(language === 'th' ? 'th-TH' : 'en-US', { dateStyle: 'medium' })}
+                      </td>
+                      <td style={{ padding: '16px', fontWeight: 500 }}>{tx.title}</td>
+                      <td style={{ padding: '16px' }}>
+                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', background: 'var(--bg-hover)', padding: '4px 10px', borderRadius: '100px', fontSize: '0.85rem' }}>
+                          <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: tx.category.color || 'var(--primary-main)' }}></span>
+                          {tx.category.name}
+                        </span>
+                      </td>
+                      <td style={{ padding: '16px', textAlign: 'right', fontWeight: 'bold', color: tx.category.type === 'income' ? 'var(--income)' : 'var(--expense)' }}>
+                        {tx.category.type === 'income' ? '+' : '-'}฿{tx.amount.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                      </td>
+                      <td style={{ padding: '16px', textAlign: 'center' }}>
+                        <button onClick={() => handleEdit(tx)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--primary-main)', marginRight: '10px' }} title="Edit">
+                          <Edit2 size={18} />
+                        </button>
+                        <button onClick={() => handleDelete(tx.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--danger)' }} title="Delete">
+                          <Trash2 size={18} />
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Mobile View (< 640px) */}
+            <div className="mobile-card-list">
+              {filteredTransactions.map(tx => (
+                <div key={`mob-tx-${tx.id}`} className="mobile-card-item">
+                  <div style={{ minWidth: 0, flex: 1 }}>
+                    <div style={{ fontWeight: 600, fontSize: '0.95rem', color: 'var(--text-main)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                      {tx.title}
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '2px' }}>
+                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', background: 'var(--bg-hover)', padding: '2px 8px', borderRadius: '100px', fontSize: '0.72rem' }}>
+                        <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: tx.category.color || 'var(--primary-main)' }}></span>
                         {tx.category.name}
                       </span>
-                    </td>
-                    <td style={{ padding: '16px', textAlign: 'right', fontWeight: 'bold', color: tx.category.type === 'income' ? 'var(--income)' : 'var(--expense)' }}>
+                      <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                        {new Date(tx.date).toLocaleDateString(language === 'th' ? 'th-TH' : 'en-US', { dateStyle: 'short' })}
+                      </span>
+                    </div>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
+                    <div style={{ textAlign: 'right', fontWeight: 700, fontSize: '0.95rem', color: tx.category.type === 'income' ? 'var(--income)' : 'var(--expense)' }}>
                       {tx.category.type === 'income' ? '+' : '-'}฿{tx.amount.toLocaleString('en-US', { minimumFractionDigits: 2 })}
-                    </td>
-                    <td style={{ padding: '16px', textAlign: 'center' }}>
-                      <button onClick={() => handleEdit(tx)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--primary-main)', marginRight: '10px' }} title="Edit">
-                        <Edit2 size={18} />
-                      </button>
-                      <button onClick={() => handleDelete(tx.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--danger)' }} title="Delete">
-                        <Trash2 size={18} />
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                    </div>
+                    <button onClick={() => handleEdit(tx)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--primary-main)', padding: '4px' }}>
+                      <Edit2 size={16} />
+                    </button>
+                    <button onClick={() => handleDelete(tx.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--danger)', padding: '4px' }}>
+                      <Trash2 size={16} />
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </>
         )}
 
         {filteredTransactions.length > 0 && (

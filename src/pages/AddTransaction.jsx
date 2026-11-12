@@ -201,9 +201,10 @@ const AddTransaction = () => {
             <div className="amount-input-container">
               <span className="amount-label">{t('amount')}</span>
               <div className="amount-wrapper">
-                <span className="currency-symbol">$</span>
+                <span className="currency-symbol">฿</span>
                 <input 
                   type="text" 
+                  inputMode="decimal"
                   className="amount-input" 
                   placeholder="0.00" 
                   autoFocus 

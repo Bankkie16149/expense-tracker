@@ -169,25 +169,10 @@ const ChatWidget = () => {
   };
 
   return (
-    <div style={{
-      position: 'fixed',
-      bottom: '24px',
-      right: '24px',
-      zIndex: 1000
-    }}>
+    <div className="chat-widget-container">
       {/* Chat Window */}
       {isOpen && (
-        <div style={{
-          width: '320px',
-          height: '450px',
-          backgroundColor: 'white',
-          borderRadius: '16px',
-          boxShadow: '0 8px 32px rgba(0,0,0,0.15)',
-          display: 'flex',
-          flexDirection: 'column',
-          marginBottom: '16px',
-          overflow: 'hidden'
-        }}>
+        <div className="chat-widget-window">
           {/* Header */}
           <div style={{
             padding: '16px',
@@ -337,25 +322,10 @@ const ChatWidget = () => {
       {/* Floating Button */}
       <button 
         onClick={() => setIsOpen(!isOpen)}
-        style={{
-          width: '60px',
-          height: '60px',
-          borderRadius: '50%',
-          backgroundColor: 'var(--primary-main)',
-          color: 'white',
-          border: 'none',
-          boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          cursor: 'pointer',
-          transition: 'transform 0.2s',
-          float: 'right'
-        }}
-        onMouseOver={(e) => e.currentTarget.style.transform = 'scale(1.05)'}
-        onMouseOut={(e) => e.currentTarget.style.transform = 'scale(1)'}
+        className="chat-widget-btn"
+        aria-label="Chat with Admin"
       >
-        {isOpen ? <X size={28} /> : <MessageSquare size={28} />}
+        {isOpen ? <X size={26} /> : <MessageSquare size={26} />}
       </button>
     </div>
   );

@@ -18,6 +18,7 @@ import {
 import { useNavigate } from 'react-router-dom';
 import { useTransactions } from '../hooks/useTransactions';
 import TransactionRow from '../components/Dashboard/TransactionRow';
+import MobileTransactionCard from '../components/Dashboard/MobileTransactionCard';
 import InsightCard from '../components/Dashboard/InsightCard';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { useLanguage } from '../contexts/LanguageContext';
@@ -38,6 +39,13 @@ const Dashboard = () => {
   const [filterDate, setFilterDate] = useState('');
   const [filterCategory, setFilterCategory] = useState('all');
   const currentYearStr = new Date().getFullYear().toString();
+  const [isMobile, setIsMobile] = useState(() => typeof window !== 'undefined' ? window.innerWidth < 640 : false);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 640);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   const { transactions, stats, forecast, isLoading, refresh } = useTransactions(filterMonth, currentYearStr);
 
@@ -404,8 +412,8 @@ const Dashboard = () => {
             <ResponsiveContainer>
               <BarChart
                 data={chartData}
-                margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
-                barSize={45}
+                margin={{ top: 20, right: isMobile ? 10 : 30, left: isMobile ? -15 : 20, bottom: 5 }}
+                barSize={isMobile ? 22 : 45}
               >
                 <defs>
                   <linearGradient id="colorIncome" x1="0" y1="0" x2="0" y2="1">
@@ -470,26 +478,47 @@ const Dashboard = () => {
             ) : filteredTransactions.length === 0 ? (
               <p className="text-muted" style={{ textAlign: 'center', padding: '2rem' }}>{t('noTransactions')}</p>
             ) : (
-              <div className="table-responsive">
-                <table className="data-table" style={{ width: '100%', minWidth: '500px' }}>
-                  <tbody>
-                    {filteredTransactions.slice(0, 5).map(tItem => (
-                      <TransactionRow 
-                        key={tItem.id}
-                        icon={<CategoryIcon categoryName={tItem.category?.name || tItem.subtitle} />} 
-                        title={tItem.title} 
-                        subtitle={tItem.subtitle} 
-                        category={tItem.category?.name || tItem.subtitle} 
-                        badgeClass={tItem.category?.type === 'income' ? 'badge-income' : 'badge-housing'}
-                        badgeStyle={tItem.category?.type === 'income' ? { background: 'rgba(0, 51, 102, 0.1)', color: 'var(--primary-main)' } : {}}
-                        date={new Date(tItem.date).toLocaleDateString(t('jan') === 'มกราคม' ? 'th-TH' : 'en-US', { month: 'short', day: 'numeric', year: 'numeric' })} 
-                        amount={`${tItem.category?.type === 'expense' ? '-' : '+'}฿${tItem.amount.toLocaleString()}`} 
-                        isNegative={tItem.category?.type === 'expense'} 
-                      />
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+              <>
+                {/* Desktop View: Full Data Table */}
+                <div className="table-responsive desktop-table-view">
+                  <table className="data-table" style={{ width: '100%', minWidth: '500px' }}>
+                    <tbody>
+                      {filteredTransactions.slice(0, 5).map(tItem => (
+                        <TransactionRow 
+                          key={tItem.id}
+                          icon={<CategoryIcon categoryName={tItem.category?.name || tItem.subtitle} />} 
+                          title={tItem.title} 
+                          subtitle={tItem.subtitle} 
+                          category={tItem.category?.name || tItem.subtitle} 
+                          badgeClass={tItem.category?.type === 'income' ? 'badge-income' : 'badge-housing'}
+                          badgeStyle={tItem.category?.type === 'income' ? { background: 'rgba(0, 51, 102, 0.1)', color: 'var(--primary-main)' } : {}}
+                          date={new Date(tItem.date).toLocaleDateString(t('jan') === 'มกราคม' ? 'th-TH' : 'en-US', { month: 'short', day: 'numeric', year: 'numeric' })} 
+                          amount={`${tItem.category?.type === 'expense' ? '-' : '+'}฿${tItem.amount.toLocaleString()}`} 
+                          isNegative={tItem.category?.type === 'expense'} 
+                        />
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+
+                {/* Mobile View: Banking-Style Cards (< 640px) */}
+                <div className="mobile-card-list">
+                  {filteredTransactions.slice(0, 5).map(tItem => (
+                    <MobileTransactionCard 
+                      key={`mob-${tItem.id}`}
+                      icon={<CategoryIcon categoryName={tItem.category?.name || tItem.subtitle} />} 
+                      title={tItem.title} 
+                      subtitle={tItem.subtitle} 
+                      category={tItem.category?.name || tItem.subtitle} 
+                      badgeClass={tItem.category?.type === 'income' ? 'badge-income' : 'badge-housing'}
+                      badgeStyle={tItem.category?.type === 'income' ? { background: 'rgba(0, 51, 102, 0.1)', color: 'var(--primary-main)' } : {}}
+                      date={new Date(tItem.date).toLocaleDateString(t('jan') === 'มกราคม' ? 'th-TH' : 'en-US', { month: 'short', day: 'numeric' })} 
+                      amount={`${tItem.category?.type === 'expense' ? '-' : '+'}฿${tItem.amount.toLocaleString()}`} 
+                      isNegative={tItem.category?.type === 'expense'} 
+                    />
+                  ))}
+                </div>
+              </>
             )}
           </div>
         </div>

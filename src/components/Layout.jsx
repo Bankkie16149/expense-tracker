@@ -9,6 +9,7 @@ import { useLocation } from 'react-router-dom';
 import Swal from 'sweetalert2';
 import NotificationSetupModal from './NotificationSetupModal';
 import ProfileEditModal from './ProfileEditModal';
+import BottomNav from './BottomNav';
 
 const Layout = ({ children, searchQuery, setSearchQuery, showSearch = false }) => {
   const { t, language, toggleLanguage } = useLanguage();
@@ -321,6 +322,9 @@ const Layout = ({ children, searchQuery, setSearchQuery, showSearch = false }) =
           <Footer />
         </div>
       </main>
+      
+      {/* Mobile Bottom Navigation Bar (< 768px) */}
+      <BottomNav onMenuClick={() => setIsSidebarOpen(true)} />
       
       {showNotifSetup && (
         <NotificationSetupModal 

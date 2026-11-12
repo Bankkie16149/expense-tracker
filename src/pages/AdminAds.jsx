@@ -327,74 +327,139 @@ export default function AdminAds() {
             ) : ads.length === 0 ? (
               <div style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)' }}>No ads found.</div>
             ) : (
-              <div className="table-responsive">
-                <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
-                  <thead>
-                    <tr style={{ borderBottom: '1px solid var(--border)' }}>
-                      <th style={{ padding: '12px 16px', color: 'var(--text-muted)', fontWeight: 500 }}>Image</th>
-                      <th style={{ padding: '12px 16px', color: 'var(--text-muted)', fontWeight: 500 }}>Description</th>
-                      <th style={{ padding: '12px 16px', color: 'var(--text-muted)', fontWeight: 500 }}>Owner</th>
-                      <th style={{ padding: '12px 16px', color: 'var(--text-muted)', fontWeight: 500 }}>Duration</th>
-                      <th style={{ padding: '12px 16px', color: 'var(--text-muted)', fontWeight: 500 }}>Status</th>
-                      <th style={{ padding: '12px 16px', color: 'var(--text-muted)', fontWeight: 500, textAlign: 'right' }}>Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {ads.map(ad => (
-                      <tr key={ad.id} style={{ borderBottom: '1px solid var(--border)', transition: 'background-color 0.2s' }} className="table-row-hover">
-                        <td style={{ padding: '16px' }}>
-                          {ad.images && ad.images.length > 0 ? (
-                            <img src={ad.images[0]} alt="ad" style={{ width: '50px', height: '50px', objectFit: 'cover', borderRadius: '4px' }} />
-                          ) : <ImageIcon size={24} />}
-                        </td>
-                        <td style={{ padding: '16px', maxWidth: '200px' }}>
-                          <div style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontWeight: 500 }}>{ad.description}</div>
-                        </td>
-                        <td style={{ padding: '16px' }}>{ad.ownerEmail}</td>
-                        <td style={{ padding: '16px', fontSize: '0.9rem', color: 'var(--text-muted)' }}>
-                          {new Date(ad.startDate).toLocaleDateString()} - {new Date(ad.endDate).toLocaleDateString()}
-                        </td>
-                        <td style={{ padding: '16px' }}>
+              <>
+                {/* Desktop View */}
+                <div className="table-responsive desktop-table-view">
+                  <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+                    <thead>
+                      <tr style={{ borderBottom: '1px solid var(--border)' }}>
+                        <th style={{ padding: '12px 16px', color: 'var(--text-muted)', fontWeight: 500 }}>Image</th>
+                        <th style={{ padding: '12px 16px', color: 'var(--text-muted)', fontWeight: 500 }}>Description</th>
+                        <th style={{ padding: '12px 16px', color: 'var(--text-muted)', fontWeight: 500 }}>Owner</th>
+                        <th style={{ padding: '12px 16px', color: 'var(--text-muted)', fontWeight: 500 }}>Duration</th>
+                        <th style={{ padding: '12px 16px', color: 'var(--text-muted)', fontWeight: 500 }}>Status</th>
+                        <th style={{ padding: '12px 16px', color: 'var(--text-muted)', fontWeight: 500, textAlign: 'right' }}>Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {ads.map(ad => (
+                        <tr key={ad.id} style={{ borderBottom: '1px solid var(--border)', transition: 'background-color 0.2s' }} className="table-row-hover">
+                          <td style={{ padding: '16px' }}>
+                            {ad.images && ad.images.length > 0 ? (
+                              <img src={ad.images[0]} alt="ad" style={{ width: '50px', height: '50px', objectFit: 'cover', borderRadius: '4px' }} />
+                            ) : <ImageIcon size={24} />}
+                          </td>
+                          <td style={{ padding: '16px', maxWidth: '200px' }}>
+                            <div style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontWeight: 500 }}>{ad.description}</div>
+                          </td>
+                          <td style={{ padding: '16px' }}>{ad.ownerEmail}</td>
+                          <td style={{ padding: '16px', fontSize: '0.9rem', color: 'var(--text-muted)' }}>
+                            {new Date(ad.startDate).toLocaleDateString()} - {new Date(ad.endDate).toLocaleDateString()}
+                          </td>
+                          <td style={{ padding: '16px' }}>
+                            {ad.isActive ? (
+                              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', color: 'var(--success)', fontSize: '0.9rem', fontWeight: 500 }}>
+                                <Check size={16} /> Active
+                              </span>
+                            ) : (
+                              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', color: 'var(--text-muted)', fontSize: '0.9rem', fontWeight: 500 }}>
+                                <X size={16} /> Inactive
+                              </span>
+                            )}
+                          </td>
+                          <td style={{ padding: '16px', textAlign: 'right' }}>
+                            <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
+                              <button 
+                                onClick={() => toggleStatus(ad)}
+                                style={{ background: 'var(--bg-hover)', color: ad.isActive ? 'var(--text-muted)' : 'var(--success)', border: 'none', padding: '6px', borderRadius: '6px', cursor: 'pointer' }}
+                                title={ad.isActive ? "Deactivate" : "Activate"}
+                              >
+                                {ad.isActive ? <EyeOff size={18} /> : <Eye size={18} />}
+                              </button>
+                              <button 
+                                onClick={() => handleEditClick(ad)}
+                                style={{ background: 'var(--bg-hover)', color: 'var(--primary-main)', border: 'none', padding: '6px', borderRadius: '6px', cursor: 'pointer' }}
+                                title="Edit Ad"
+                              >
+                                <Edit size={18} />
+                              </button>
+                              <button 
+                                onClick={() => handleDelete(ad.id)}
+                                style={{ background: 'var(--bg-hover-danger)', color: 'var(--danger)', border: 'none', padding: '6px', borderRadius: '6px', cursor: 'pointer' }}
+                                title="Delete Ad"
+                              >
+                                <Trash2 size={18} />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+
+                {/* Mobile View (< 640px) */}
+                <div className="mobile-card-list">
+                  {ads.map(ad => (
+                    <div key={`mob-ad-${ad.id}`} className="mobile-card-item" style={{ flexDirection: 'column', alignItems: 'stretch', gap: '10px' }}>
+                      <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+                        {ad.images && ad.images.length > 0 ? (
+                          <img src={ad.images[0]} alt="ad" style={{ width: '56px', height: '56px', objectFit: 'cover', borderRadius: '8px', flexShrink: 0 }} />
+                        ) : (
+                          <div style={{ width: '56px', height: '56px', background: 'var(--bg-hover)', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                            <ImageIcon size={24} color="var(--text-muted)" />
+                          </div>
+                        )}
+                        <div style={{ minWidth: 0, flex: 1 }}>
+                          <div style={{ fontWeight: 600, fontSize: '0.95rem', color: 'var(--text-main)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                            {ad.description}
+                          </div>
+                          <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '2px' }}>
+                            {ad.ownerEmail}
+                          </div>
+                          <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '2px' }}>
+                            {new Date(ad.startDate).toLocaleDateString()} - {new Date(ad.endDate).toLocaleDateString()}
+                          </div>
+                        </div>
+                      </div>
+
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '8px', borderTop: '1px solid var(--border)' }}>
+                        <div>
                           {ad.isActive ? (
-                            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', color: 'var(--success)', fontSize: '0.9rem', fontWeight: 500 }}>
-                              <Check size={16} /> Active
+                            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', color: 'var(--success)', fontSize: '0.8rem', fontWeight: 600 }}>
+                              <Check size={14} /> Active
                             </span>
                           ) : (
-                            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', color: 'var(--text-muted)', fontSize: '0.9rem', fontWeight: 500 }}>
-                              <X size={16} /> Inactive
+                            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', color: 'var(--text-muted)', fontSize: '0.8rem', fontWeight: 600 }}>
+                              <X size={14} /> Inactive
                             </span>
                           )}
-                        </td>
-                        <td style={{ padding: '16px', textAlign: 'right' }}>
-                          <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
-                            <button 
-                              onClick={() => toggleStatus(ad)}
-                              style={{ background: 'var(--bg-hover)', color: ad.isActive ? 'var(--text-muted)' : 'var(--success)', border: 'none', padding: '6px', borderRadius: '6px', cursor: 'pointer' }}
-                              title={ad.isActive ? "Deactivate" : "Activate"}
-                            >
-                              {ad.isActive ? <EyeOff size={18} /> : <Eye size={18} />}
-                            </button>
-                            <button 
-                              onClick={() => handleEditClick(ad)}
-                              style={{ background: 'var(--bg-hover)', color: 'var(--primary-main)', border: 'none', padding: '6px', borderRadius: '6px', cursor: 'pointer' }}
-                              title="Edit Ad"
-                            >
-                              <Edit size={18} />
-                            </button>
-                            <button 
-                              onClick={() => handleDelete(ad.id)}
-                              style={{ background: 'var(--bg-hover-danger)', color: 'var(--danger)', border: 'none', padding: '6px', borderRadius: '6px', cursor: 'pointer' }}
-                              title="Delete Ad"
-                            >
-                              <Trash2 size={18} />
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+                        </div>
+                        <div style={{ display: 'flex', gap: '8px' }}>
+                          <button 
+                            onClick={() => toggleStatus(ad)}
+                            style={{ background: 'var(--bg-hover)', color: ad.isActive ? 'var(--text-muted)' : 'var(--success)', border: 'none', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.8rem' }}
+                          >
+                            {ad.isActive ? <EyeOff size={16} /> : <Eye size={16} />} <span>{ad.isActive ? 'Hide' : 'Show'}</span>
+                          </button>
+                          <button 
+                            onClick={() => handleEditClick(ad)}
+                            style={{ background: 'var(--bg-hover)', color: 'var(--primary-main)', border: 'none', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.8rem' }}
+                          >
+                            <Edit size={16} /> <span>Edit</span>
+                          </button>
+                          <button 
+                            onClick={() => handleDelete(ad.id)}
+                            style={{ background: 'var(--bg-hover-danger)', color: 'var(--danger)', border: 'none', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.8rem' }}
+                          >
+                            <Trash2 size={16} /> <span>Del</span>
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </>
             )}
           </div>
         )}

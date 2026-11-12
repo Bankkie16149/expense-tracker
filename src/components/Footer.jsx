@@ -55,6 +55,11 @@ const Footer = () => {
           background: transparent;
           border-top: 1px solid var(--border);
         }
+        @media (max-width: 768px) {
+          .site-footer {
+            display: none !important;
+          }
+        }
         .footer-content {
           max-width: 1200px;
           margin: 0 auto;

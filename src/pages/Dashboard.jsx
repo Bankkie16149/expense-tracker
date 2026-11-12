@@ -403,7 +403,7 @@ const Dashboard = () => {
       </div>
 
       <div className="main-grid">
-        <div className="card main-dashboard-card" style={{ padding: '2rem' }}>
+        <div className="card main-dashboard-card">
           <div className="flex justify-between items-center mb-6">
             <h3 style={{ fontSize: '1.25rem' }}>{t('chartTitle')}</h3>
           </div>

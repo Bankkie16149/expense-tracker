@@ -49,11 +49,12 @@ const MobileTransactionCard = ({
         </div>
       </div>
 
-      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0, marginLeft: '6px' }}>
         <div style={{ 
           textAlign: 'right', 
           fontWeight: 700, 
           fontSize: '0.95rem',
+          whiteSpace: 'nowrap',
           color: isNegative ? 'var(--danger)' : 'var(--success)' 
         }}>
           {amount}

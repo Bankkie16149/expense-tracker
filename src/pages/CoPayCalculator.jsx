@@ -12,7 +12,7 @@ const CoPayCalculator = () => {
   const [userPays, setUserPays] = useState(0);
 
   const user = JSON.parse(localStorage.getItem('user') || '{}');
-  const isPro = user?.isPro || false;
+  const isAuthorized = Boolean(user?.isPro || user?.isAdmin);
 
   useEffect(() => {
     const numPrice = parseFloat(price);
@@ -32,7 +32,7 @@ const CoPayCalculator = () => {
     setUserPays(numPrice - calculatedGovPays);
   }, [price]);
 
-  if (!isPro) {
+  if (!isAuthorized) {
     return <Navigate to="/dashboard" replace />;
   }
 

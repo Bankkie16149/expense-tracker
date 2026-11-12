@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import Layout from '../components/Layout';
 import { 
   User, 
@@ -72,23 +72,33 @@ const Profile = () => {
     year: 'numeric'
   });
 
-  // Calculate today's income and expense
-  const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
-  
-  const todayTransactions = (transactions || []).filter(item => {
-    if (!item.date) return false;
-    const itemDate = new Date(item.date);
-    const itemStr = `${itemDate.getFullYear()}-${String(itemDate.getMonth() + 1).padStart(2, '0')}-${String(itemDate.getDate()).padStart(2, '0')}`;
-    return itemStr === todayStr;
-  });
+  // Calculate today's income and expense (matching exact local calendar day)
+  const isSameCalendarDay = (date1, date2) => {
+    if (!date1 || !date2) return false;
+    const d1 = new Date(date1);
+    const d2 = new Date(date2);
+    return (
+      d1.getFullYear() === d2.getFullYear() &&
+      d1.getMonth() === d2.getMonth() &&
+      d1.getDate() === d2.getDate()
+    );
+  };
 
-  const todayIncome = todayTransactions
-    .filter(item => item.type === 'income')
-    .reduce((sum, item) => sum + Number(item.amount || 0), 0);
+  const todayTransactions = useMemo(() => {
+    return (transactions || []).filter(item => isSameCalendarDay(item.date, now));
+  }, [transactions]);
 
-  const todayExpense = todayTransactions
-    .filter(item => item.type === 'expense')
-    .reduce((sum, item) => sum + Number(item.amount || 0), 0);
+  const todayIncome = useMemo(() => {
+    return todayTransactions
+      .filter(item => item.category?.type === 'income' || item.type === 'income')
+      .reduce((sum, item) => sum + Number(item.amount || 0), 0);
+  }, [todayTransactions]);
+
+  const todayExpense = useMemo(() => {
+    return todayTransactions
+      .filter(item => item.category?.type === 'expense' || item.type === 'expense')
+      .reduce((sum, item) => sum + Number(item.amount || 0), 0);
+  }, [todayTransactions]);
 
   const todayNet = todayIncome - todayExpense;
 
@@ -364,18 +374,35 @@ const Profile = () => {
               </div>
             </button>
 
-            {/* Co-Pay Calculator (Thai Chuy Thai) */}
-            <Link to="/calculator" className="profile-menu-row">
-              <div className="profile-menu-row-left">
-                <div className="profile-menu-icon">
-                  <Calculator size={18} />
+            {/* Savings Goals (For Pro & Admin) */}
+            {(isPro || isAdmin) && (
+              <Link to="/savings" className="profile-menu-row">
+                <div className="profile-menu-row-left">
+                  <div className="profile-menu-icon" style={{ color: '#00A8E8' }}>
+                    <PiggyBank size={18} />
+                  </div>
+                  <span>{language === 'th' ? 'การออมเงิน (Savings)' : 'Savings Goals'}</span>
                 </div>
-                <span>{language === 'th' ? 'เครื่องมือคำนวณ ไทยช่วยไทย' : 'Co-Pay Calculator'}</span>
-              </div>
-              <div className="profile-menu-row-right">
-                <ChevronRight size={18} />
-              </div>
-            </Link>
+                <div className="profile-menu-row-right">
+                  <ChevronRight size={18} />
+                </div>
+              </Link>
+            )}
+
+            {/* Co-Pay Calculator (Thai Chuy Thai) for Pro & Admin */}
+            {(isPro || isAdmin) && (
+              <Link to="/calculator" className="profile-menu-row">
+                <div className="profile-menu-row-left">
+                  <div className="profile-menu-icon" style={{ color: '#27ae60' }}>
+                    <Calculator size={18} />
+                  </div>
+                  <span>{language === 'th' ? 'เครื่องมือคำนวณ ไทยช่วยไทย' : 'Co-Pay Calculator'}</span>
+                </div>
+                <div className="profile-menu-row-right">
+                  <ChevronRight size={18} />
+                </div>
+              </Link>
+            )}
 
             {/* Admin Hub shortcut if admin */}
             {isAdmin && (

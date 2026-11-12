@@ -35,7 +35,7 @@ const MobileTransactionCard = ({
           }}>
             {title}
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '2px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '2px', flexWrap: 'wrap' }}>
             <span 
               className={`transaction-badge ${badgeClass}`} 
               style={{ fontSize: '0.7rem', padding: '2px 6px', ...badgeStyle }}

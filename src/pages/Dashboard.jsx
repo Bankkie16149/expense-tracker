@@ -481,7 +481,7 @@ const Dashboard = () => {
               <>
                 {/* Desktop View: Full Data Table */}
                 <div className="table-responsive desktop-table-view">
-                  <table className="data-table" style={{ width: '100%', minWidth: '500px' }}>
+                  <table className="data-table" style={{ width: '100%' }}>
                     <tbody>
                       {filteredTransactions.slice(0, 5).map(tItem => (
                         <TransactionRow 

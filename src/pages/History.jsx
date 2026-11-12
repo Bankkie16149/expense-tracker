@@ -272,7 +272,7 @@ const History = () => {
 
       <div className="card history-card">
         <div className="history-header">
-          <h2 style={{ fontSize: '1.25rem', whiteSpace: 'nowrap', margin: 0 }}>{t('recentTransactions')}</h2>
+          <h2 style={{ fontSize: '1.2rem', margin: 0, wordBreak: 'break-word', lineHeight: 1.3 }}>{t('recentTransactions')}</h2>
           <div className="history-filters-row">
             <div className="history-filters-group">
               <select 

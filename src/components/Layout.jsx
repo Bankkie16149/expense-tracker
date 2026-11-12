@@ -5,10 +5,12 @@ import { Search, Bell, Globe, Menu, X, CheckCircle, Info, Settings, LogOut, User
 import { useLanguage } from '../contexts/LanguageContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { fetchWithAuth } from '../utils/api';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import Swal from 'sweetalert2';
 import NotificationSetupModal from './NotificationSetupModal';
 import ProfileEditModal from './ProfileEditModal';
+import BottomNav from './BottomNav';
+import Logo from './Logo';
 
 const Layout = ({ children, searchQuery, setSearchQuery, showSearch = false }) => {
   const { t, language, toggleLanguage } = useLanguage();
@@ -22,6 +24,7 @@ const Layout = ({ children, searchQuery, setSearchQuery, showSearch = false }) =
   const notifRef = useRef(null);
   const profileRef = useRef(null);
   const location = useLocation();
+  const navigate = useNavigate();
   const [profilePic, setProfilePic] = useState(null);
   const [showNotifSetup, setShowNotifSetup] = useState(false);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
@@ -46,7 +49,11 @@ const Layout = ({ children, searchQuery, setSearchQuery, showSearch = false }) =
   }, []);
 
   const handleProfileClick = () => {
-    setShowProfileMenu(!showProfileMenu);
+    if (window.innerWidth <= 768) {
+      navigate('/profile');
+    } else {
+      setShowProfileMenu(!showProfileMenu);
+    }
   };
 
   const hour = new Date().getHours();
@@ -150,6 +157,12 @@ const Layout = ({ children, searchQuery, setSearchQuery, showSearch = false }) =
             <button className="mobile-menu-btn" onClick={() => setIsSidebarOpen(!isSidebarOpen)}>
               <Menu size={24} color="var(--text-main)" />
             </button>
+            <div className="mobile-brand-title">
+              <Logo size={24} />
+              <span style={{ fontWeight: 700, fontSize: '1.05rem', color: 'var(--text-main)', letterSpacing: '0.3px', whiteSpace: 'nowrap' }}>
+                {user?.customAppName || 'FinTrack'}
+              </span>
+            </div>
             {showSearch && (
               <div className="search-box" style={{ flex: 1, maxWidth: '360px', minWidth: 0 }}>
                 <div style={{ position: 'relative' }}>
@@ -321,6 +334,9 @@ const Layout = ({ children, searchQuery, setSearchQuery, showSearch = false }) =
           <Footer />
         </div>
       </main>
+      
+      {/* Mobile Bottom Navigation Bar (< 768px) */}
+      <BottomNav onMenuClick={() => setIsSidebarOpen(true)} />
       
       {showNotifSetup && (
         <NotificationSetupModal 

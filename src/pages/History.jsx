@@ -5,6 +5,7 @@ import { useTransactions } from '../hooks/useTransactions';
 import { useLanguage } from '../contexts/LanguageContext';
 import { Download, Trash2, History as HistoryIcon, ShieldCheck, FilterX } from 'lucide-react';
 import TransactionRow from '../components/Dashboard/TransactionRow';
+import MobileTransactionCard from '../components/Dashboard/MobileTransactionCard';
 import Swal from 'sweetalert2';
 import CategoryIcon from '../components/CategoryIcon';
 import { fetchWithAuth } from '../utils/api';
@@ -271,7 +272,7 @@ const History = () => {
 
       <div className="card history-card">
         <div className="history-header">
-          <h2 style={{ fontSize: '1.25rem', whiteSpace: 'nowrap', margin: 0 }}>{t('recentTransactions')}</h2>
+          <h2 style={{ fontSize: '1.2rem', margin: 0, wordBreak: 'break-word', lineHeight: 1.3 }}>{t('recentTransactions')}</h2>
           <div className="history-filters-row">
             <div className="history-filters-group">
               <select 
@@ -297,18 +298,6 @@ const History = () => {
                   <option value={filterCategory}>{filterCategory}</option>
                 )}
               </select>
-              <input 
-                type="date" 
-                className="form-control" 
-                value={filterDate}
-                onChange={(e) => {
-                  setFilterDate(e.target.value);
-                  if (e.target.value) {
-                    const d = new Date(e.target.value);
-                    setFilterMonth(d.getMonth().toString());
-                  }
-                }}
-              />
               <select 
                 className="form-control" 
                 value={filterMonth}
@@ -324,23 +313,36 @@ const History = () => {
                   </option>
                 ))}
               </select>
+              <input 
+                type="date" 
+                className="form-control" 
+                value={filterDate}
+                onChange={(e) => {
+                  setFilterDate(e.target.value);
+                  if (e.target.value) {
+                    const d = new Date(e.target.value);
+                    setFilterMonth(d.getMonth().toString());
+                  }
+                }}
+              />
             </div>
             
             <div className="history-actions-group">
-              <button className="btn btn-outline" onClick={triggerExport} style={{ padding: '8px 12px', justifyContent: 'center', display: 'flex', alignItems: 'center' }}>
-                <Download size={16} className="mr-2" style={{ marginRight: '8px' }} />
+              <button className="btn btn-outline" onClick={triggerExport} style={{ padding: '6px 12px', justifyContent: 'center', display: 'flex', alignItems: 'center' }}>
+                <Download size={15} style={{ marginRight: '6px' }} />
                 Export
               </button>
-              <button className="btn" onClick={handleDeleteAll} style={{ padding: '8px 12px', background: 'var(--danger)', color: 'white', justifyContent: 'center', display: 'flex', alignItems: 'center' }}>
-                <Trash2 size={16} className="mr-2" style={{ marginRight: '8px' }} />
+              <button className="btn" onClick={handleDeleteAll} style={{ padding: '6px 12px', background: 'var(--danger)', color: 'white', justifyContent: 'center', display: 'flex', alignItems: 'center' }}>
+                <Trash2 size={15} style={{ marginRight: '6px' }} />
                 Delete All
               </button>
             </div>
           </div>
         </div>
 
-        <div className="table-responsive">
-          <table className="data-table" style={{ minWidth: '600px' }}>
+        {/* Desktop View: Full Data Table */}
+        <div className="table-responsive desktop-table-view">
+          <table className="data-table">
             <thead>
               <tr>
                 <th>{t('transaction')}</th>
@@ -373,6 +375,29 @@ const History = () => {
               )}
             </tbody>
           </table>
+        </div>
+
+        {/* Mobile View: Banking-Style Cards (< 640px) */}
+        <div className="mobile-card-list">
+          {filteredTransactions.map(tItem => (
+            <MobileTransactionCard 
+              key={`mob-hist-${tItem.id}`}
+              icon={<CategoryIcon categoryName={tItem.category?.name || tItem.subtitle} />} 
+              title={tItem.title} 
+              subtitle={tItem.subtitle} 
+              category={tItem.category?.name || tItem.subtitle} 
+              badgeClass={tItem.category?.type === 'income' ? 'badge-income' : 'badge-housing'}
+              badgeStyle={tItem.category?.type === 'income' ? { background: 'rgba(0, 51, 102, 0.1)', color: 'var(--primary-main)' } : {}}
+              date={new Date(tItem.date).toLocaleDateString(t('jan') === 'มกราคม' ? 'th-TH' : 'en-US', { month: 'short', day: 'numeric', year: 'numeric' })} 
+              amount={`${tItem.category?.type === 'expense' ? '-' : '+'}฿${tItem.amount.toLocaleString()}`} 
+              isNegative={tItem.category?.type === 'expense'} 
+            />
+          ))}
+          {!isLoading && filteredTransactions.length === 0 && (
+            <div style={{ textAlign: 'center', padding: '3rem 1rem', color: 'var(--text-muted)' }}>
+              No transactions found for this period.
+            </div>
+          )}
         </div>
       </div>
 

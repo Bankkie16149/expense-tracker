@@ -8,6 +8,7 @@ import AddTransaction from './pages/AddTransaction';
 import History from './pages/History';
 import Savings from './pages/Savings';
 import CoPayCalculator from './pages/CoPayCalculator';
+import Profile from './pages/Profile';
 import AdminDashboard from './pages/AdminDashboard';
 import AdminUserTransactions from './pages/AdminUserTransactions';
 import AdminAds from './pages/AdminAds';
@@ -51,6 +52,7 @@ function App() {
           <Route path="/add-transaction" element={<ProtectedRoute><AddTransaction /></ProtectedRoute>} />
           <Route path="/history" element={<ProtectedRoute><History /></ProtectedRoute>} />
           <Route path="/savings" element={<ProtectedRoute><Savings /></ProtectedRoute>} />
+          <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
           <Route path="/calculator" element={<ProtectedRoute><CoPayCalculator /></ProtectedRoute>} />
           <Route path="/admin" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
           <Route path="/admin/ads" element={<ProtectedRoute><AdminAds /></ProtectedRoute>} />

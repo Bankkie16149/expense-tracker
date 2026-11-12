@@ -885,8 +885,8 @@
 
 @media (max-width: 768px) {
   .pdf-modal-toolbar {
-    padding: 0 10px;
-    gap: 6px;
+    padding: 0 12px;
+    gap: 8px;
   }
 
   .pdf-file-badge {
@@ -894,8 +894,8 @@
   }
 
   .pdf-file-name {
-    max-width: 110px;
-    font-size: 0.8rem;
+    max-width: 140px;
+    font-size: 0.82rem;
   }
 
   .pdf-page-indicator {
@@ -908,14 +908,16 @@
 
   .pdf-action-btn-print {
     padding: 6px 10px;
+    min-height: 34px;
   }
 
   .pdf-action-btn-download span {
-    font-size: 0.75rem;
+    font-size: 0.78rem;
   }
 
   .pdf-action-btn-download {
-    padding: 6px 10px;
+    padding: 6px 12px;
+    min-height: 34px;
   }
 
   .pdf-modal-canvas {
@@ -923,14 +925,73 @@
   }
 }
 
-@media (max-width: 480px) {
+@media (max-width: 640px) {
+  .pdf-modal-toolbar {
+    flex-wrap: wrap !important;
+    min-height: auto !important;
+    padding: 8px 12px !important;
+    gap: 8px !important;
+  }
+
   .pdf-toolbar-left {
-    gap: 6px;
+    order: 1 !important;
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
   }
 
   .pdf-file-name {
-    max-width: 85px;
-    font-size: 0.75rem;
+    max-width: 120px !important;
+    font-size: 0.8rem !important;
+  }
+
+  .pdf-toolbar-right {
+    order: 2 !important;
+    flex-shrink: 0 !important;
+    gap: 6px !important;
+  }
+
+  .pdf-toolbar-center {
+    order: 3 !important;
+    width: 100% !important;
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    padding-top: 6px !important;
+    border-top: 1px solid var(--pdf-toolbar-border) !important;
+    margin: 0 !important;
+  }
+
+  .pdf-action-btn-download {
+    padding: 6px 10px !important;
+    font-size: 0.78rem !important;
+    min-height: 32px !important;
+  }
+
+  .pdf-action-btn-download span {
+    display: inline !important;
+    font-size: 0.78rem !important;
+  }
+
+  .pdf-action-btn-print {
+    padding: 6px 8px !important;
+    min-height: 32px !important;
+  }
+
+  .pdf-close-btn {
+    min-width: 32px !important;
+    min-height: 32px !important;
+    padding: 4px !important;
+  }
+
+  .pdf-modal-canvas {
+    padding: 12px 6px !important;
+  }
+}
+
+@media (max-width: 440px) {
+  .pdf-file-name {
+    max-width: 90px !important;
+    font-size: 0.75rem !important;
   }
 
   .pdf-zoom-val {
@@ -950,18 +1011,8 @@
     font-size: 0.7rem;
   }
 
-  .pdf-action-btn-download {
-    padding: 6px 8px;
-  }
-
   .pdf-action-btn-download span {
-    display: none;
-  }
-
-  .pdf-close-btn {
-    min-width: 28px;
-    min-height: 28px;
-    padding: 4px;
+    font-size: 0.72rem !important;
   }
 }
 

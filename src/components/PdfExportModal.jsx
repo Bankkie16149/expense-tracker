@@ -44,25 +44,29 @@ const PdfExportModal = ({
   // Responsive initial fit zoom based on device screen
   const getFitZoom = () => {
     if (typeof window === 'undefined') return 1.0;
-    const padding = window.innerWidth < 640 ? 20 : window.innerWidth < 1024 ? 36 : 48;
+    const padding = window.innerWidth < 640 ? 16 : window.innerWidth < 1024 ? 32 : 64;
     const availableWidth = window.innerWidth - padding;
     const a4PixelWidth = 794; // approx 210mm at 96dpi
     const calculated = availableWidth / a4PixelWidth;
-    return Math.min(1.05, Math.max(0.35, Math.round(calculated * 100) / 100));
+    if (window.innerWidth < 850) {
+      return Math.min(1.0, Math.max(0.35, Math.round(calculated * 100) / 100));
+    }
+    return Math.min(1.15, Math.max(0.65, Math.round(calculated * 100) / 100));
   };
 
   const [zoom, setZoom] = useState(() => getFitZoom());
+  const [hasUserZoomed, setHasUserZoomed] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
 
   useEffect(() => {
     const handleResize = () => {
-      if (window.innerWidth < 768) {
+      if (!hasUserZoomed) {
         setZoom(getFitZoom());
       }
     };
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
-  }, []);
+  }, [hasUserZoomed]);
 
   // Calculations
   const {
@@ -205,9 +209,18 @@ const PdfExportModal = ({
   const signatureDataUrl = useMemo(() => generateSignatureImage(userName), [userName]);
 
   // Zoom handlers
-  const handleZoomIn = () => setZoom((prev) => Math.min(1.4, Math.round((prev + 0.1) * 10) / 10));
-  const handleZoomOut = () => setZoom((prev) => Math.max(0.35, Math.round((prev - 0.1) * 10) / 10));
-  const handleZoomReset = () => setZoom(getFitZoom());
+  const handleZoomIn = () => {
+    setHasUserZoomed(true);
+    setZoom((prev) => Math.min(1.5, Math.round((prev + 0.1) * 10) / 10));
+  };
+  const handleZoomOut = () => {
+    setHasUserZoomed(true);
+    setZoom((prev) => Math.max(0.35, Math.round((prev - 0.1) * 10) / 10));
+  };
+  const handleZoomReset = () => {
+    setHasUserZoomed(false);
+    setZoom(getFitZoom());
+  };
 
   // Print handler
   const handlePrint = () => {

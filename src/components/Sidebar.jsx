@@ -105,7 +105,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
             </NavLink>
           </li>
         )}
-        {isPro && (
+        {(isPro || isAdmin) && (
           <>
             <li className="nav-item">
               <NavLink to="/savings" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`} onClick={() => setIsOpen && setIsOpen(false)}>

@@ -298,18 +298,6 @@ const History = () => {
                   <option value={filterCategory}>{filterCategory}</option>
                 )}
               </select>
-              <input 
-                type="date" 
-                className="form-control" 
-                value={filterDate}
-                onChange={(e) => {
-                  setFilterDate(e.target.value);
-                  if (e.target.value) {
-                    const d = new Date(e.target.value);
-                    setFilterMonth(d.getMonth().toString());
-                  }
-                }}
-              />
               <select 
                 className="form-control" 
                 value={filterMonth}
@@ -325,15 +313,27 @@ const History = () => {
                   </option>
                 ))}
               </select>
+              <input 
+                type="date" 
+                className="form-control" 
+                value={filterDate}
+                onChange={(e) => {
+                  setFilterDate(e.target.value);
+                  if (e.target.value) {
+                    const d = new Date(e.target.value);
+                    setFilterMonth(d.getMonth().toString());
+                  }
+                }}
+              />
             </div>
             
             <div className="history-actions-group">
-              <button className="btn btn-outline" onClick={triggerExport} style={{ padding: '8px 12px', justifyContent: 'center', display: 'flex', alignItems: 'center' }}>
-                <Download size={16} className="mr-2" style={{ marginRight: '8px' }} />
+              <button className="btn btn-outline" onClick={triggerExport} style={{ padding: '6px 12px', justifyContent: 'center', display: 'flex', alignItems: 'center' }}>
+                <Download size={15} style={{ marginRight: '6px' }} />
                 Export
               </button>
-              <button className="btn" onClick={handleDeleteAll} style={{ padding: '8px 12px', background: 'var(--danger)', color: 'white', justifyContent: 'center', display: 'flex', alignItems: 'center' }}>
-                <Trash2 size={16} className="mr-2" style={{ marginRight: '8px' }} />
+              <button className="btn" onClick={handleDeleteAll} style={{ padding: '6px 12px', background: 'var(--danger)', color: 'white', justifyContent: 'center', display: 'flex', alignItems: 'center' }}>
+                <Trash2 size={15} style={{ marginRight: '6px' }} />
                 Delete All
               </button>
             </div>

@@ -10,8 +10,6 @@ import {
   Bell, 
   LogOut, 
   Shield, 
-  PiggyBank, 
-  Calculator, 
   ChevronRight, 
   Sparkles, 
   TrendingUp, 
@@ -373,51 +371,6 @@ const Profile = () => {
                 <ChevronRight size={18} />
               </div>
             </button>
-
-            {/* Savings Goals (For Pro & Admin) */}
-            {(isPro || isAdmin) && (
-              <Link to="/savings" className="profile-menu-row">
-                <div className="profile-menu-row-left">
-                  <div className="profile-menu-icon" style={{ color: '#00A8E8' }}>
-                    <PiggyBank size={18} />
-                  </div>
-                  <span>{language === 'th' ? 'การออมเงิน (Savings)' : 'Savings Goals'}</span>
-                </div>
-                <div className="profile-menu-row-right">
-                  <ChevronRight size={18} />
-                </div>
-              </Link>
-            )}
-
-            {/* Co-Pay Calculator (Thai Chuy Thai) for Pro & Admin */}
-            {(isPro || isAdmin) && (
-              <Link to="/calculator" className="profile-menu-row">
-                <div className="profile-menu-row-left">
-                  <div className="profile-menu-icon" style={{ color: '#27ae60' }}>
-                    <Calculator size={18} />
-                  </div>
-                  <span>{language === 'th' ? 'เครื่องมือคำนวณ ไทยช่วยไทย' : 'Co-Pay Calculator'}</span>
-                </div>
-                <div className="profile-menu-row-right">
-                  <ChevronRight size={18} />
-                </div>
-              </Link>
-            )}
-
-            {/* Admin Hub shortcut if admin */}
-            {isAdmin && (
-              <Link to="/admin" className="profile-menu-row">
-                <div className="profile-menu-row-left">
-                  <div className="profile-menu-icon" style={{ color: '#d97706' }}>
-                    <Shield size={18} />
-                  </div>
-                  <span>{language === 'th' ? 'ระบบจัดการผู้ดูแลระบบ (Admin Hub)' : 'Admin Dashboard'}</span>
-                </div>
-                <div className="profile-menu-row-right">
-                  <ChevronRight size={18} />
-                </div>
-              </Link>
-            )}
 
             {/* Upgrade to Pro if free */}
             {!isPro && !isAdmin && (

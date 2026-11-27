@@ -6,20 +6,6 @@ const path = require('path');
 const prisma = new PrismaClient();
 const SETTINGS_FILE = path.join(__dirname, '../db/systemSettings.json');
 
-const ensureSettingsTable = async () => {
-  try {
-    await prisma.$executeRawUnsafe(`
-      CREATE TABLE IF NOT EXISTS "SystemSetting" (
-        "key" TEXT PRIMARY KEY,
-        "value" TEXT NOT NULL,
-        "updatedAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-      );
-    `);
-  } catch (e) {
-    // Fallback to file if DB table creation fails
-  }
-};
-
 const readLocalSettings = () => {
   try {
     if (fs.existsSync(SETTINGS_FILE)) {
@@ -35,10 +21,26 @@ const writeLocalSettings = (data) => {
   } catch (e) {}
 };
 
+const ensureSettingsTable = async () => {
+  try {
+    await prisma.$executeRaw`
+      CREATE TABLE IF NOT EXISTS "SystemSetting" (
+        "key" TEXT PRIMARY KEY,
+        "value" TEXT NOT NULL,
+        "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP
+      )
+    `;
+  } catch (e) {}
+};
+
 exports.getSystemSettings = async (req, res) => {
   try {
     await ensureSettingsTable();
-    const rows = await prisma.$queryRawUnsafe(`SELECT "key", "value" FROM "SystemSetting" WHERE "key" IN ('coPayEnabled', 'coPayWarningText')`);
+    const rows = await prisma.systemSetting.findMany({
+      where: {
+        key: { in: ['coPayEnabled', 'coPayWarningText'] }
+      }
+    });
     if (Array.isArray(rows) && rows.length > 0) {
       const map = {};
       rows.forEach(r => { map[r.key] = r.value; });
@@ -65,16 +67,16 @@ exports.updateSystemSettings = async (req, res) => {
 
     try {
       await ensureSettingsTable();
-      await prisma.$executeRawUnsafe(
-        `INSERT INTO "SystemSetting" ("key", "value", "updatedAt") VALUES ('coPayEnabled', $1, CURRENT_TIMESTAMP)
-         ON CONFLICT ("key") DO UPDATE SET "value" = EXCLUDED."value", "updatedAt" = CURRENT_TIMESTAMP`,
-        String(coPayEnabled)
-      );
-      await prisma.$executeRawUnsafe(
-        `INSERT INTO "SystemSetting" ("key", "value", "updatedAt") VALUES ('coPayWarningText', $1, CURRENT_TIMESTAMP)
-         ON CONFLICT ("key") DO UPDATE SET "value" = EXCLUDED."value", "updatedAt" = CURRENT_TIMESTAMP`,
-        coPayWarningText
-      );
+      await prisma.systemSetting.upsert({
+        where: { key: 'coPayEnabled' },
+        update: { value: String(coPayEnabled) },
+        create: { key: 'coPayEnabled', value: String(coPayEnabled) }
+      });
+      await prisma.systemSetting.upsert({
+        where: { key: 'coPayWarningText' },
+        update: { value: coPayWarningText },
+        create: { key: 'coPayWarningText', value: coPayWarningText }
+      });
     } catch (dbErr) {
       console.error('DB settings write fallback:', dbErr.message);
     }

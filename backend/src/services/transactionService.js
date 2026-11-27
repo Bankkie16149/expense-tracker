@@ -20,9 +20,18 @@ const transactionService = {
   },
 
   async createTransaction(data, userId) {
-    const category = await prisma.category.findFirst({
+    let category = await prisma.category.findFirst({
       where: { name: data.categoryName }
     });
+
+    if (!category && data.categoryName) {
+      category = await prisma.category.create({
+        data: {
+          name: data.categoryName,
+          type: data.type === 'income' ? 'income' : 'expense'
+        }
+      });
+    }
 
     if (!category) throw new Error("Category not found");
 

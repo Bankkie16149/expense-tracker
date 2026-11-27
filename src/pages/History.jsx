@@ -284,16 +284,17 @@ const History = () => {
                 <option value="income">{language === 'th' ? 'รายรับทั้งหมด' : 'All Income'}</option>
                 <option value="expense">{language === 'th' ? 'รายจ่ายทั้งหมด' : 'All Expenses'}</option>
                 <option value="food">{language === 'th' ? 'อาหาร' : 'Food'}</option>
+                <option value="ค่ากาแฟ">{language === 'th' ? 'ค่ากาแฟ' : 'Coffee'}</option>
                 <option value="housing">{language === 'th' ? 'ที่พัก/บ้าน' : 'Housing'}</option>
                 <option value="transportation">{language === 'th' ? 'เดินทาง' : 'Transportation'}</option>
                 {uniqueCategories
-                  .filter((cat) => !['food', 'housing', 'transportation', 'income', 'expense', 'อาหาร', 'ที่พัก/บ้าน', 'เดินทาง'].includes(cat.toLowerCase()))
+                  .filter((cat) => !['food', 'housing', 'transportation', 'income', 'expense', 'อาหาร', 'ที่พัก/บ้าน', 'เดินทาง', 'ค่ากาแฟ', 'coffee'].includes(cat.toLowerCase()))
                   .map((cat) => (
                     <option key={cat} value={cat}>{cat}</option>
                   ))
                 }
                 {filterCategory !== 'all' && 
-                 !['food', 'housing', 'transportation', 'income', 'expense', 'อาหาร', 'ที่พัก/บ้าน', 'เดินทาง'].includes(filterCategory.toLowerCase()) && 
+                 !['food', 'housing', 'transportation', 'income', 'expense', 'อาหาร', 'ที่พัก/บ้าน', 'เดินทาง', 'ค่ากาแฟ', 'coffee'].includes(filterCategory.toLowerCase()) && 
                  !uniqueCategories.map(c => c.toLowerCase()).includes(filterCategory.toLowerCase()) && (
                   <option value={filterCategory}>{filterCategory}</option>
                 )}

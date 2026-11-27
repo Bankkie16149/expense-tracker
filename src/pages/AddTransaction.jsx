@@ -50,8 +50,43 @@ const AddTransaction = () => {
   const [description, setDescription] = useState('');
   const [selectedCoffeeMenu, setSelectedCoffeeMenu] = useState('');
   const [selectedCoffeeBrand, setSelectedCoffeeBrand] = useState('');
+  const [coPaySettings, setCoPaySettings] = useState(() => {
+    try {
+      const cached = JSON.parse(localStorage.getItem('fintrack_system_settings') || '{}');
+      return {
+        coPayEnabled: cached.coPayEnabled !== undefined ? Boolean(cached.coPayEnabled) : true,
+        coPayWarningText: cached.coPayWarningText || ''
+      };
+    } catch {
+      return { coPayEnabled: true, coPayWarningText: '' };
+    }
+  });
   const user = JSON.parse(localStorage.getItem('user') || '{}');
-  const isPro = user?.isPro || false;
+  const isPro = Boolean(user?.isPro || user?.isAdmin);
+
+  useEffect(() => {
+    const syncSettings = () => {
+      fetchWithAuth('/api/system-settings')
+        .then(res => res.ok ? res.json() : null)
+        .then(data => {
+          if (data) {
+            const next = {
+              coPayEnabled: data.coPayEnabled !== undefined ? Boolean(data.coPayEnabled) : true,
+              coPayWarningText: data.coPayWarningText || ''
+            };
+            setCoPaySettings(next);
+            localStorage.setItem('fintrack_system_settings', JSON.stringify(next));
+            if (!next.coPayEnabled) {
+              setIsCoPayMode(false);
+            }
+          }
+        })
+        .catch(() => {});
+    };
+    syncSettings();
+    window.addEventListener('systemSettingsUpdated', syncSettings);
+    return () => window.removeEventListener('systemSettingsUpdated', syncSettings);
+  }, []);
 
   useEffect(() => {
     fetchWithAuth('/api/categories')
@@ -146,7 +181,7 @@ const AddTransaction = () => {
     
     let finalTitle = descriptionInput || (isExpense ? t('expense') : t('income'));
 
-    if (isExpense && isCoPayMode) {
+    if (isExpense && isCoPayMode && coPaySettings.coPayEnabled) {
       let govPays = parsedAmount * 0.6;
       if (govPays > 200) govPays = 200;
       parsedAmount = parsedAmount - govPays;
@@ -293,18 +328,103 @@ const AddTransaction = () => {
             </div>
 
             {isExpense && isPro && (
-              <div style={{ margin: '1rem 0', padding: '1rem', background: isCoPayMode ? 'rgba(0, 168, 232, 0.05)' : 'var(--bg-card)', border: isCoPayMode ? '1px solid rgba(0, 168, 232, 0.3)' : '1px solid var(--border)', borderRadius: '12px', transition: 'all 0.3s' }}>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer' }} onClick={() => setIsCoPayMode(!isCoPayMode)}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                    <img src="/thai-chuy-thai.png" alt="Thai Chuy Thai" style={{ width: '1.5em', height: '1.5em', objectFit: 'contain' }} />
-                    <span style={{ fontWeight: 600 }}>{language === 'th' ? 'ใช้สิทธิ์โครงการไทยช่วยไทย (60/40)' : 'Use Thai Chuy Thai (60/40)'}</span>
+              <div
+                style={{
+                  margin: '1rem 0',
+                  padding: '1rem',
+                  background: !coPaySettings.coPayEnabled
+                    ? 'var(--bg-body)'
+                    : isCoPayMode
+                      ? 'rgba(0, 168, 232, 0.05)'
+                      : 'var(--bg-card)',
+                  border: !coPaySettings.coPayEnabled
+                    ? '1px dashed var(--border)'
+                    : isCoPayMode
+                      ? '1px solid rgba(0, 168, 232, 0.3)'
+                      : '1px solid var(--border)',
+                  borderRadius: '12px',
+                  transition: 'all 0.3s',
+                  opacity: !coPaySettings.coPayEnabled ? 0.78 : 1
+                }}
+              >
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    gap: '12px',
+                    cursor: coPaySettings.coPayEnabled ? 'pointer' : 'not-allowed'
+                  }}
+                  onClick={() => {
+                    if (!coPaySettings.coPayEnabled) return;
+                    setIsCoPayMode(!isCoPayMode);
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.75rem', minWidth: 0, flex: 1 }}>
+                    <img
+                      src="/thai-chuy-thai.png"
+                      alt="Thai Chuy Thai"
+                      style={{
+                        width: '1.5em',
+                        height: '1.5em',
+                        objectFit: 'contain',
+                        flexShrink: 0,
+                        marginTop: '2px',
+                        filter: !coPaySettings.coPayEnabled ? 'grayscale(100%)' : 'none'
+                      }}
+                    />
+                    <div style={{ minWidth: 0, flex: 1 }}>
+                      <div style={{ fontWeight: 600, color: !coPaySettings.coPayEnabled ? 'var(--text-muted)' : 'var(--text-main)', lineHeight: 1.35, wordBreak: 'break-word' }}>
+                        {language === 'th' ? 'ใช้สิทธิ์โครงการไทยช่วยไทย (60/40)' : 'Use Thai Chuy Thai (60/40)'}
+                      </div>
+                      {(!coPaySettings.coPayEnabled || coPaySettings.coPayWarningText) && (
+                        <div
+                          style={{
+                            fontSize: '0.76rem',
+                            color: 'var(--danger)',
+                            marginTop: '4px',
+                            lineHeight: 1.4,
+                            fontWeight: 500,
+                            wordBreak: 'break-word'
+                          }}
+                        >
+                          {coPaySettings.coPayWarningText ||
+                            (language === 'th'
+                              ? 'ฟังก์ชันไทยช่วยไทยปิดให้บริการชั่วคราวโดยผู้ดูแลระบบ'
+                              : 'Thai Chuy Thai is temporarily disabled by Administrator')}
+                        </div>
+                      )}
+                    </div>
                   </div>
-                  <div className={`toggle-switch ${isCoPayMode ? 'active' : ''}`} style={{ width: '40px', height: '20px', borderRadius: '10px', background: isCoPayMode ? 'var(--primary-main)' : 'var(--text-muted)', position: 'relative', transition: 'background 0.3s' }}>
-                    <div style={{ width: '16px', height: '16px', borderRadius: '50%', background: 'white', position: 'absolute', top: '2px', left: isCoPayMode ? '22px' : '2px', transition: 'left 0.3s' }}></div>
+                  <div
+                    className={`toggle-switch ${isCoPayMode && coPaySettings.coPayEnabled ? 'active' : ''}`}
+                    style={{
+                      width: '40px',
+                      height: '20px',
+                      borderRadius: '10px',
+                      background: isCoPayMode && coPaySettings.coPayEnabled ? 'var(--primary-main)' : 'var(--text-muted)',
+                      position: 'relative',
+                      transition: 'background 0.3s',
+                      flexShrink: 0,
+                      opacity: coPaySettings.coPayEnabled ? 1 : 0.45
+                    }}
+                  >
+                    <div
+                      style={{
+                        width: '16px',
+                        height: '16px',
+                        borderRadius: '50%',
+                        background: 'white',
+                        position: 'absolute',
+                        top: '2px',
+                        left: isCoPayMode && coPaySettings.coPayEnabled ? '22px' : '2px',
+                        transition: 'left 0.3s'
+                      }}
+                    />
                   </div>
                 </div>
                 
-                {isCoPayMode && (
+                {isCoPayMode && coPaySettings.coPayEnabled && (
                   <div style={{ marginTop: '1rem', paddingTop: '1rem', borderTop: '1px dashed var(--border)', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                     <div style={{ textAlign: 'center' }}>
                       <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>{language === 'th' ? 'รัฐจ่าย (60%)' : 'Gov Pays'}</div>

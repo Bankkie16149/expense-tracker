@@ -17,5 +17,9 @@ router.post('/pro-requests/:id/reject', adminController.rejectProRequest);
 router.put('/transactions/:id', adminController.updateUserTransaction);
 router.delete('/transactions/:id', adminController.deleteUserTransaction);
 
+// System Settings (Co-Pay toggle & warning message)
+router.get('/system-settings', adminController.getSystemSettings);
+router.put('/system-settings', adminController.updateSystemSettings);
+
 module.exports = router;
   

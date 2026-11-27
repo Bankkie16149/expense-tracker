@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Navigate } from 'react-router-dom';
 import Layout from '../components/Layout';
 import { useLanguage } from '../contexts/LanguageContext';
-import { Calculator } from 'lucide-react';
+import { fetchWithAuth } from '../utils/api';
+import { AlertTriangle } from 'lucide-react';
 import '../index.css'; // Uses existing styles
 
 const CoPayCalculator = () => {
@@ -10,9 +11,46 @@ const CoPayCalculator = () => {
   const [price, setPrice] = useState('');
   const [govPays, setGovPays] = useState(0);
   const [userPays, setUserPays] = useState(0);
+  const [coPaySettings, setCoPaySettings] = useState(() => {
+    try {
+      const cached = JSON.parse(localStorage.getItem('fintrack_system_settings') || '{}');
+      return {
+        coPayEnabled: cached.coPayEnabled !== undefined ? Boolean(cached.coPayEnabled) : true,
+        coPayWarningText: cached.coPayWarningText || ''
+      };
+    } catch {
+      return { coPayEnabled: true, coPayWarningText: '' };
+    }
+  });
 
   const user = JSON.parse(localStorage.getItem('user') || '{}');
   const isAuthorized = Boolean(user?.isPro || user?.isAdmin);
+
+  useEffect(() => {
+    const syncSettings = () => {
+      fetchWithAuth('/api/system-settings')
+        .then(res => res.ok ? res.json() : null)
+        .then(data => {
+          if (data) {
+            const next = {
+              coPayEnabled: data.coPayEnabled !== undefined ? Boolean(data.coPayEnabled) : true,
+              coPayWarningText: data.coPayWarningText || ''
+            };
+            setCoPaySettings(next);
+            localStorage.setItem('fintrack_system_settings', JSON.stringify(next));
+            if (!next.coPayEnabled) {
+              setPrice('');
+              setGovPays(0);
+              setUserPays(0);
+            }
+          }
+        })
+        .catch(() => {});
+    };
+    syncSettings();
+    window.addEventListener('systemSettingsUpdated', syncSettings);
+    return () => window.removeEventListener('systemSettingsUpdated', syncSettings);
+  }, []);
 
   useEffect(() => {
     const numPrice = parseFloat(price);
@@ -55,7 +93,33 @@ const CoPayCalculator = () => {
       <div className="main-grid" style={{ gridTemplateColumns: '1fr', maxWidth: '800px', margin: '2rem auto' }}>
         <div className="card" style={{ padding: '2rem', borderRadius: '32px' }}>
           
-          <div className="form-group" style={{ marginBottom: '2rem' }}>
+          {(!coPaySettings.coPayEnabled || coPaySettings.coPayWarningText) && (
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '10px',
+                padding: '12px 16px',
+                marginBottom: '1.5rem',
+                borderRadius: '12px',
+                background: 'rgba(239, 68, 68, 0.08)',
+                border: '1px solid rgba(239, 68, 68, 0.25)',
+                color: 'var(--danger)',
+                fontSize: '0.88rem',
+                fontWeight: 600
+              }}
+            >
+              <AlertTriangle size={18} style={{ flexShrink: 0 }} />
+              <span>
+                {coPaySettings.coPayWarningText ||
+                  (language === 'th'
+                    ? 'ฟังก์ชันไทยช่วยไทยปิดให้บริการชั่วคราวโดยผู้ดูแลระบบ'
+                    : 'Thai Chuy Thai is temporarily disabled by Administrator')}
+              </span>
+            </div>
+          )}
+
+          <div className="form-group" style={{ marginBottom: '2rem', opacity: coPaySettings.coPayEnabled ? 1 : 0.6 }}>
             <label style={{ fontWeight: 600, fontSize: '1.1rem', color: 'var(--primary-main)' }}>
               {language === 'th' ? 'ราคาเต็มสินค้า/บริการ (บาท)' : 'Full Price (THB)'}
             </label>
@@ -64,9 +128,17 @@ const CoPayCalculator = () => {
                 type="number"
                 className="form-control"
                 value={price}
-                onChange={(e) => setPrice(e.target.value)}
-                placeholder={language === 'th' ? 'ระบุราคา' : 'Enter full price'}
-                style={{ fontSize: '1.5rem', padding: '1rem', height: 'auto', textAlign: 'center', fontWeight: '600' }}
+                disabled={!coPaySettings.coPayEnabled}
+                onChange={(e) => {
+                  if (!coPaySettings.coPayEnabled) return;
+                  setPrice(e.target.value);
+                }}
+                placeholder={
+                  !coPaySettings.coPayEnabled
+                    ? (language === 'th' ? 'ปิดการใช้งานชั่วคราว' : 'Temporarily Disabled')
+                    : (language === 'th' ? 'ระบุราคา' : 'Enter full price')
+                }
+                style={{ fontSize: '1.5rem', padding: '1rem', height: 'auto', textAlign: 'center', fontWeight: '600', cursor: coPaySettings.coPayEnabled ? 'text' : 'not-allowed' }}
                 min="0"
               />
             </div>

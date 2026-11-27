@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { fetchWithAuth } from '../utils/api';
 import { useLanguage } from '../contexts/LanguageContext';
-import { Trash2, Edit, Plus, Eye, Check, X, UserPlus, Megaphone, MessageSquare } from 'lucide-react';
+import { Trash2, Edit, Plus, Eye, Check, X, UserPlus, Megaphone, MessageSquare, SlidersHorizontal, AlertTriangle } from 'lucide-react';
 import Layout from '../components/Layout';
 import Swal from 'sweetalert2';
 import '../index.css';
@@ -12,6 +12,24 @@ const AdminDashboard = () => {
   const [proRequests, setProRequests] = useState([]);
   const [activeTab, setActiveTab] = useState('users');
   const [loading, setLoading] = useState(true);
+  const [showCoPayPanel, setShowCoPayPanel] = useState(false);
+  const [coPayEnabled, setCoPayEnabled] = useState(() => {
+    try {
+      const cached = JSON.parse(localStorage.getItem('fintrack_system_settings') || '{}');
+      return cached.coPayEnabled !== undefined ? Boolean(cached.coPayEnabled) : true;
+    } catch {
+      return true;
+    }
+  });
+  const [coPayWarningText, setCoPayWarningText] = useState(() => {
+    try {
+      const cached = JSON.parse(localStorage.getItem('fintrack_system_settings') || '{}');
+      return cached.coPayWarningText || '';
+    } catch {
+      return '';
+    }
+  });
+  const [savingSettings, setSavingSettings] = useState(false);
   const { language } = useLanguage();
   const navigate = useNavigate();
 
@@ -21,10 +39,62 @@ const AdminDashboard = () => {
     if (!user?.isAdmin) {
       navigate('/');
     } else {
+      loadSystemSettings();
       if (activeTab === 'users') loadUsers();
       else loadProRequests();
     }
   }, [navigate, activeTab]);
+
+  const loadSystemSettings = async () => {
+    try {
+      const res = await fetchWithAuth('/api/system-settings');
+      if (res.ok) {
+        const data = await res.json();
+        const enabled = data.coPayEnabled !== undefined ? Boolean(data.coPayEnabled) : true;
+        const warning = data.coPayWarningText || '';
+        setCoPayEnabled(enabled);
+        setCoPayWarningText(warning);
+        localStorage.setItem('fintrack_system_settings', JSON.stringify({ coPayEnabled: enabled, coPayWarningText: warning }));
+      }
+    } catch (e) {
+      console.error('Failed to load system settings', e);
+    }
+  };
+
+  const handleSaveCoPaySettings = async (e) => {
+    if (e) e.preventDefault();
+    setSavingSettings(true);
+    try {
+      const payload = {
+        coPayEnabled: Boolean(coPayEnabled),
+        coPayWarningText: coPayWarningText.trim()
+      };
+      const res = await fetchWithAuth('/api/admin/system-settings', {
+        method: 'PUT',
+        body: JSON.stringify(payload)
+      });
+      if (!res.ok) throw new Error('Failed to save settings');
+      const data = await res.json();
+      localStorage.setItem('fintrack_system_settings', JSON.stringify({
+        coPayEnabled: data.coPayEnabled,
+        coPayWarningText: data.coPayWarningText
+      }));
+      window.dispatchEvent(new Event('systemSettingsUpdated'));
+      Swal.fire({
+        icon: 'success',
+        title: language === 'th' ? 'บันทึกการตั้งค่าสำเร็จ' : 'Settings Saved',
+        text: language === 'th'
+          ? `สถานะไทยช่วยไทย: ${data.coPayEnabled ? 'เปิดใช้งาน' : 'ปิดใช้งาน (ทุกบัญชีรวมถึงแอดมิน)'}`
+          : `Thai Chuy Thai is now ${data.coPayEnabled ? 'Enabled' : 'Disabled for all users'}`,
+        confirmButtonColor: 'var(--primary-main)'
+      });
+      setShowCoPayPanel(false);
+    } catch (error) {
+      Swal.fire('Error', error.message || 'Failed to update settings', 'error');
+    } finally {
+      setSavingSettings(false);
+    }
+  };
 
   const loadUsers = async () => {
     setLoading(true);
@@ -276,20 +346,169 @@ const AdminDashboard = () => {
             <p style={{ color: 'var(--text-muted)' }}>{language === 'th' ? 'จัดการผู้ใช้และดูภาพรวมของระบบ' : 'Manage users and system overview'}</p>
           </div>
           <div className="admin-header-actions">
-            <button onClick={() => navigate('/admin/chat')} className="btn btn-outline" style={{ display: 'flex', alignItems: 'center', gap: '8px', border: '1px solid var(--border)', background: 'white' }}>
+            <button onClick={() => navigate('/admin/chat')} className="btn btn-outline" style={{ display: 'flex', alignItems: 'center', gap: '8px', border: '1px solid var(--border)', background: 'var(--bg-card)' }}>
               <MessageSquare size={18} />
-              {language === 'th' ? 'แชทกับผู้ใช้' : 'User Chats'}
+              <span>{language === 'th' ? 'แชทกับผู้ใช้' : 'User Chats'}</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setShowCoPayPanel(!showCoPayPanel)}
+              className="btn btn-outline"
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                border: showCoPayPanel ? '1.5px solid var(--primary-main)' : '1px solid var(--border)',
+                background: showCoPayPanel ? 'rgba(0, 168, 232, 0.08)' : 'var(--bg-card)',
+                color: 'var(--text-main)'
+              }}
+            >
+              <img src="/thai-chuy-thai.png" alt="Thai Chuy Thai" style={{ width: '18px', height: '18px', objectFit: 'contain', flexShrink: 0 }} />
+              <span>{language === 'th' ? 'ตั้งค่าไทยช่วยไทย' : 'Co-Pay Control'}</span>
+              <span
+                style={{
+                  width: '8px',
+                  height: '8px',
+                  borderRadius: '50%',
+                  background: coPayEnabled ? '#22c55e' : '#ef4444',
+                  flexShrink: 0
+                }}
+                title={coPayEnabled ? 'เปิดใช้งาน' : 'ปิดใช้งาน'}
+              />
             </button>
             <button onClick={() => navigate('/admin/ads')} className="btn btn-primary" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               <Megaphone size={18} />
-              {language === 'th' ? 'จัดการโฆษณา' : 'Manage Ads'}
+              <span>{language === 'th' ? 'จัดการโฆษณา' : 'Manage Ads'}</span>
             </button>
             <button onClick={handleCreateUser} className="btn btn-primary" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               <UserPlus size={18} />
-              {language === 'th' ? 'เพิ่มผู้ใช้' : 'Add User'}
+              <span>{language === 'th' ? 'เพิ่มผู้ใช้' : 'Add User'}</span>
             </button>
           </div>
         </div>
+
+        {/* Responsive Co-Pay Admin Control Card inside Admin Dashboard */}
+        {showCoPayPanel && (
+          <div className="card admin-copay-card">
+            <div className="admin-copay-header">
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0 }}>
+                <img src="/thai-chuy-thai.png" alt="Thai Chuy Thai" style={{ width: '24px', height: '24px', objectFit: 'contain', flexShrink: 0 }} />
+                <div>
+                  <h3 style={{ margin: 0, fontSize: '1.05rem', color: 'var(--text-main)' }}>
+                    {language === 'th' ? 'ควบคุมฟังก์ชันโครงการไทยช่วยไทย (60/40)' : 'Thai Chuy Thai (60/40) System Control'}
+                  </h3>
+                  <p style={{ margin: '2px 0 0', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                    {language === 'th'
+                      ? 'เมื่อปิดฟังก์ชัน ผู้ใช้ทุกคนรวมถึงแอดมินจะไม่สามารถกดใช้สิทธิ์ได้ และจะแสดงข้อความคำเตือนตรงปุ่ม'
+                      : 'When disabled, all users including Admins cannot use Co-Pay, and the warning text will appear on the button.'}
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowCoPayPanel(false)}
+                style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: '4px', flexShrink: 0 }}
+                aria-label="Close"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveCoPaySettings} className="admin-copay-body">
+              <div
+                className="admin-copay-toggle-row"
+                onClick={() => setCoPayEnabled(!coPayEnabled)}
+              >
+                <div style={{ minWidth: 0, flex: 1 }}>
+                  <div style={{ fontWeight: 600, fontSize: '0.92rem', color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                    <span>{language === 'th' ? 'สถานะฟังก์ชันไทยช่วยไทย' : 'Function Status'}</span>
+                    <span
+                      style={{
+                        fontSize: '0.75rem',
+                        padding: '2px 8px',
+                        borderRadius: '999px',
+                        fontWeight: 700,
+                        background: coPayEnabled ? 'rgba(34, 197, 94, 0.14)' : 'rgba(239, 68, 68, 0.14)',
+                        color: coPayEnabled ? '#16a34a' : '#dc2626'
+                      }}
+                    >
+                      {coPayEnabled
+                        ? (language === 'th' ? 'เปิดใช้งาน (Enabled)' : 'Enabled')
+                        : (language === 'th' ? 'ปิดใช้งานทั้งหมด (Disabled)' : 'Disabled')}
+                    </span>
+                  </div>
+                  <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: '2px' }}>
+                    {language === 'th'
+                      ? 'คลิกเพื่อสลับเปิดหรือปิดการใช้งานทั้งระบบ (มีผลกับแอดมินด้วย)'
+                      : 'Click to toggle system-wide availability (affects Admins as well)'}
+                  </div>
+                </div>
+                <div
+                  style={{
+                    width: '44px',
+                    height: '24px',
+                    borderRadius: '12px',
+                    background: coPayEnabled ? 'var(--primary-main)' : 'var(--text-muted)',
+                    position: 'relative',
+                    transition: 'background 0.25s ease',
+                    flexShrink: 0
+                  }}
+                >
+                  <div
+                    style={{
+                      width: '20px',
+                      height: '20px',
+                      borderRadius: '50%',
+                      background: '#fff',
+                      position: 'absolute',
+                      top: '2px',
+                      left: coPayEnabled ? '22px' : '2px',
+                      transition: 'left 0.25s ease',
+                      boxShadow: '0 1px 3px rgba(0,0,0,0.2)'
+                    }}
+                  />
+                </div>
+              </div>
+
+              <div className="admin-copay-input-group">
+                <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontWeight: 600, fontSize: '0.88rem', color: 'var(--text-main)', marginBottom: '6px' }}>
+                  <AlertTriangle size={15} color="var(--danger)" />
+                  <span>{language === 'th' ? 'ข้อความคำเตือน (แสดงเป็นข้อความเล็กๆ ตรงปุ่มใช้ไทยช่วยไทย)' : 'Warning Message (shown on the Thai Chuy Thai button)'}</span>
+                </label>
+                <input
+                  type="text"
+                  className="form-control"
+                  value={coPayWarningText}
+                  onChange={(e) => setCoPayWarningText(e.target.value)}
+                  placeholder={
+                    language === 'th'
+                      ? 'เช่น ปิดใช้งานชั่วคราวเนื่องจากสิทธิ์โครงการเต็มแล้ว หรือ เฉพาะร้านค้าที่ร่วมรายการ'
+                      : 'e.g. Temporarily disabled due to quota limit'
+                  }
+                />
+              </div>
+
+              <div className="admin-copay-actions">
+                <button
+                  type="button"
+                  className="btn btn-outline"
+                  onClick={() => setShowCoPayPanel(false)}
+                >
+                  {language === 'th' ? 'ยกเลิก' : 'Cancel'}
+                </button>
+                <button
+                  type="submit"
+                  className="btn btn-primary"
+                  disabled={savingSettings}
+                >
+                  {savingSettings
+                    ? (language === 'th' ? 'กำลังบันทึก...' : 'Saving...')
+                    : (language === 'th' ? 'บันทึกการตั้งค่า' : 'Save Settings')}
+                </button>
+              </div>
+            </form>
+          </div>
+        )}
 
         <div style={{ display: 'flex', gap: '1rem', marginBottom: '1rem', borderBottom: '1px solid var(--border)' }}>
           <button 

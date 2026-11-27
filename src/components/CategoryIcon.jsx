@@ -20,7 +20,7 @@ export const getCategoryInfo = (categoryName) => {
     return { icon: <Briefcase size={20} />, color: '#8B5CF6', bg: 'rgba(139, 92, 246, 0.15)' };
   }
   if (name.includes('coffee') || name.includes('กาแฟ')) {
-    return { icon: <Coffee size={20} />, color: '#78350F', bg: 'rgba(120, 53, 15, 0.15)' };
+    return { icon: <Coffee size={20} />, color: 'var(--primary-main)', bg: 'rgba(0, 168, 232, 0.15)' };
   }
   if (name.includes('utility') || name.includes('ไฟฟ้า') || name.includes('น้ำ')) {
     return { icon: <Zap size={20} />, color: '#EAB308', bg: 'rgba(234, 179, 8, 0.15)' };

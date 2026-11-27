@@ -7,7 +7,10 @@ import {
   MapPin, 
   UploadCloud,
   Loader2,
-  ArrowRightLeft
+  ArrowRightLeft,
+  Coffee,
+  Store,
+  Check
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { fetchWithAuth } from '../utils/api';
@@ -15,6 +18,23 @@ import { useTransactions } from '../hooks/useTransactions';
 import { useLanguage } from '../contexts/LanguageContext';
 import Swal from 'sweetalert2';
 import { notifyUser } from '../utils/notifications';
+
+const COFFEE_MENUS = [
+  { id: 'espresso', label: 'เอสเพรซโซ่', en: 'Espresso' },
+  { id: 'cappuccino', label: 'คาปูชิโน่', en: 'Cappuccino' },
+  { id: 'latte', label: 'ลาเต้', en: 'Latte' },
+  { id: 'mocha', label: 'มอคค่า', en: 'Mocha' },
+  { id: 'americano', label: 'อเมริกาโน่', en: 'Americano' },
+  { id: 'thaitea', label: 'ชาไทย', en: 'Thai Tea' },
+  { id: 'greentea', label: 'ชาเขียว', en: 'Green Tea' },
+];
+
+const COFFEE_BRANDS = [
+  { id: 'amazon', label: 'Amazon Cafe' },
+  { id: 'punthai', label: 'Punthai Coffee' },
+  { id: 'inthanin', label: 'Inthanin Coffee' },
+  { id: 'onetotwo', label: '1:2' },
+];
 
 const AddTransaction = () => {
   const navigate = useNavigate();
@@ -27,17 +47,96 @@ const AddTransaction = () => {
   const [amountError, setAmountError] = useState(false);
   const [amount, setAmount] = useState('');
   const [category, setCategory] = useState('');
+  const [description, setDescription] = useState('');
+  const [selectedCoffeeMenu, setSelectedCoffeeMenu] = useState('');
+  const [selectedCoffeeBrand, setSelectedCoffeeBrand] = useState('');
+  const [coPaySettings, setCoPaySettings] = useState(() => {
+    try {
+      const cached = JSON.parse(localStorage.getItem('fintrack_system_settings') || '{}');
+      return {
+        coPayEnabled: cached.coPayEnabled !== undefined ? Boolean(cached.coPayEnabled) : true,
+        coPayWarningText: cached.coPayWarningText || ''
+      };
+    } catch {
+      return { coPayEnabled: true, coPayWarningText: '' };
+    }
+  });
   const user = JSON.parse(localStorage.getItem('user') || '{}');
-  const isPro = user?.isPro || false;
+  const isPro = Boolean(user?.isPro || user?.isAdmin);
+
+  useEffect(() => {
+    const syncSettings = () => {
+      fetchWithAuth('/api/system-settings')
+        .then(res => res.ok ? res.json() : null)
+        .then(data => {
+          if (data) {
+            const next = {
+              coPayEnabled: data.coPayEnabled !== undefined ? Boolean(data.coPayEnabled) : true,
+              coPayWarningText: data.coPayWarningText || ''
+            };
+            setCoPaySettings(next);
+            localStorage.setItem('fintrack_system_settings', JSON.stringify(next));
+            if (!next.coPayEnabled) {
+              setIsCoPayMode(false);
+            }
+          }
+        })
+        .catch(() => {});
+    };
+    syncSettings();
+    window.addEventListener('systemSettingsUpdated', syncSettings);
+    return () => window.removeEventListener('systemSettingsUpdated', syncSettings);
+  }, []);
 
   useEffect(() => {
     fetchWithAuth('/api/categories')
       .then(res => res.json())
-      .then(data => setCategories(data))
+      .then(data => {
+        const expList = Array.isArray(data?.expense) ? [...data.expense] : [];
+        if (!expList.includes('ค่ากาแฟ')) {
+          expList.push('ค่ากาแฟ');
+        }
+        setCategories({
+          expense: expList,
+          income: Array.isArray(data?.income) ? data.income : []
+        });
+      })
       .catch(err => console.error('Error fetching categories:', err));
   }, []);
-  const expenseCategories = categories.expense;
+  const expenseCategories = categories.expense.length > 0 ? categories.expense : ['อาหาร', 'ค่ากาแฟ', 'เดินทาง', 'ที่พัก/บ้าน'];
   const incomeCategories = categories.income;
+
+  const isCoffeeCategory = isExpense && (category === 'ค่ากาแฟ' || category.toLowerCase() === 'coffee');
+
+  const updateCoffeeDescription = (menuLabel, brandLabel) => {
+    if (!menuLabel) return;
+    if (brandLabel) {
+      setDescription(`ค่า${menuLabel} (${brandLabel})`);
+    } else {
+      setDescription(`ค่า${menuLabel}`);
+    }
+  };
+
+  const handleSelectCoffeeMenu = (menuLabel) => {
+    if (selectedCoffeeMenu === menuLabel) {
+      setSelectedCoffeeMenu('');
+      setSelectedCoffeeBrand('');
+      setDescription('');
+    } else {
+      setSelectedCoffeeMenu(menuLabel);
+      updateCoffeeDescription(menuLabel, selectedCoffeeBrand);
+    }
+  };
+
+  const handleSelectCoffeeBrand = (brandLabel) => {
+    if (selectedCoffeeBrand === brandLabel) {
+      setSelectedCoffeeBrand('');
+      updateCoffeeDescription(selectedCoffeeMenu, '');
+    } else {
+      setSelectedCoffeeBrand(brandLabel);
+      updateCoffeeDescription(selectedCoffeeMenu, brandLabel);
+    }
+  };
 
   const recentCategoriesList = React.useMemo(() => {
     const currentType = isExpense ? 'expense' : 'income';
@@ -76,13 +175,13 @@ const AddTransaction = () => {
     const amountInput = amount;
     const dateInput = document.querySelector('input[type="date"]').value;
     const categoryInput = category;
-    const descriptionInput = document.querySelector('textarea').value;
+    const descriptionInput = description.trim();
     
     let parsedAmount = parseFloat(amountInput) || 0;
     
     let finalTitle = descriptionInput || (isExpense ? t('expense') : t('income'));
 
-    if (isExpense && isCoPayMode) {
+    if (isExpense && isCoPayMode && coPaySettings.coPayEnabled) {
       let govPays = parsedAmount * 0.6;
       if (govPays > 200) govPays = 200;
       parsedAmount = parsedAmount - govPays;
@@ -229,18 +328,103 @@ const AddTransaction = () => {
             </div>
 
             {isExpense && isPro && (
-              <div style={{ margin: '1rem 0', padding: '1rem', background: isCoPayMode ? 'rgba(0, 168, 232, 0.05)' : 'var(--bg-card)', border: isCoPayMode ? '1px solid rgba(0, 168, 232, 0.3)' : '1px solid var(--border)', borderRadius: '12px', transition: 'all 0.3s' }}>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer' }} onClick={() => setIsCoPayMode(!isCoPayMode)}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                    <img src="/thai-chuy-thai.png" alt="Thai Chuy Thai" style={{ width: '1.5em', height: '1.5em', objectFit: 'contain' }} />
-                    <span style={{ fontWeight: 600 }}>{language === 'th' ? 'ใช้สิทธิ์โครงการไทยช่วยไทย (60/40)' : 'Use Thai Chuy Thai (60/40)'}</span>
+              <div
+                style={{
+                  margin: '1rem 0',
+                  padding: '1rem',
+                  background: !coPaySettings.coPayEnabled
+                    ? 'var(--bg-body)'
+                    : isCoPayMode
+                      ? 'rgba(0, 168, 232, 0.05)'
+                      : 'var(--bg-card)',
+                  border: !coPaySettings.coPayEnabled
+                    ? '1px dashed var(--border)'
+                    : isCoPayMode
+                      ? '1px solid rgba(0, 168, 232, 0.3)'
+                      : '1px solid var(--border)',
+                  borderRadius: '12px',
+                  transition: 'all 0.3s',
+                  opacity: !coPaySettings.coPayEnabled ? 0.78 : 1
+                }}
+              >
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    gap: '12px',
+                    cursor: coPaySettings.coPayEnabled ? 'pointer' : 'not-allowed'
+                  }}
+                  onClick={() => {
+                    if (!coPaySettings.coPayEnabled) return;
+                    setIsCoPayMode(!isCoPayMode);
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.75rem', minWidth: 0, flex: 1 }}>
+                    <img
+                      src="/thai-chuy-thai.png"
+                      alt="Thai Chuy Thai"
+                      style={{
+                        width: '1.5em',
+                        height: '1.5em',
+                        objectFit: 'contain',
+                        flexShrink: 0,
+                        marginTop: '2px',
+                        filter: !coPaySettings.coPayEnabled ? 'grayscale(100%)' : 'none'
+                      }}
+                    />
+                    <div style={{ minWidth: 0, flex: 1 }}>
+                      <div style={{ fontWeight: 600, color: !coPaySettings.coPayEnabled ? 'var(--text-muted)' : 'var(--text-main)', lineHeight: 1.35, wordBreak: 'break-word' }}>
+                        {language === 'th' ? 'ใช้สิทธิ์โครงการไทยช่วยไทย (60/40)' : 'Use Thai Chuy Thai (60/40)'}
+                      </div>
+                      {(!coPaySettings.coPayEnabled || coPaySettings.coPayWarningText) && (
+                        <div
+                          style={{
+                            fontSize: '0.76rem',
+                            color: 'var(--danger)',
+                            marginTop: '4px',
+                            lineHeight: 1.4,
+                            fontWeight: 500,
+                            wordBreak: 'break-word'
+                          }}
+                        >
+                          {coPaySettings.coPayWarningText ||
+                            (language === 'th'
+                              ? 'ฟังก์ชันไทยช่วยไทยปิดให้บริการชั่วคราวโดยผู้ดูแลระบบ'
+                              : 'Thai Chuy Thai is temporarily disabled by Administrator')}
+                        </div>
+                      )}
+                    </div>
                   </div>
-                  <div className={`toggle-switch ${isCoPayMode ? 'active' : ''}`} style={{ width: '40px', height: '20px', borderRadius: '10px', background: isCoPayMode ? 'var(--primary-main)' : 'var(--text-muted)', position: 'relative', transition: 'background 0.3s' }}>
-                    <div style={{ width: '16px', height: '16px', borderRadius: '50%', background: 'white', position: 'absolute', top: '2px', left: isCoPayMode ? '22px' : '2px', transition: 'left 0.3s' }}></div>
+                  <div
+                    className={`toggle-switch ${isCoPayMode && coPaySettings.coPayEnabled ? 'active' : ''}`}
+                    style={{
+                      width: '40px',
+                      height: '20px',
+                      borderRadius: '10px',
+                      background: isCoPayMode && coPaySettings.coPayEnabled ? 'var(--primary-main)' : 'var(--text-muted)',
+                      position: 'relative',
+                      transition: 'background 0.3s',
+                      flexShrink: 0,
+                      opacity: coPaySettings.coPayEnabled ? 1 : 0.45
+                    }}
+                  >
+                    <div
+                      style={{
+                        width: '16px',
+                        height: '16px',
+                        borderRadius: '50%',
+                        background: 'white',
+                        position: 'absolute',
+                        top: '2px',
+                        left: isCoPayMode && coPaySettings.coPayEnabled ? '22px' : '2px',
+                        transition: 'left 0.3s'
+                      }}
+                    />
                   </div>
                 </div>
                 
-                {isCoPayMode && (
+                {isCoPayMode && coPaySettings.coPayEnabled && (
                   <div style={{ marginTop: '1rem', paddingTop: '1rem', borderTop: '1px dashed var(--border)', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                     <div style={{ textAlign: 'center' }}>
                       <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>{language === 'th' ? 'รัฐจ่าย (60%)' : 'Gov Pays'}</div>
@@ -282,7 +466,14 @@ const AddTransaction = () => {
                   className="form-control" 
                   required 
                   value={category} 
-                  onChange={(e) => setCategory(e.target.value)}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setCategory(val);
+                    if (val !== 'ค่ากาแฟ' && val.toLowerCase() !== 'coffee') {
+                      setSelectedCoffeeMenu('');
+                      setSelectedCoffeeBrand('');
+                    }
+                  }}
                 >
                   <option value="">{isExpense ? t('selectCategory') : t('selectSource')}</option>
                   {isExpense ? expenseCategories.map(cat => (
@@ -300,9 +491,72 @@ const AddTransaction = () => {
               </div>
             </div>
 
+            {/* Interactive Step-by-Step Coffee Menu & Brand Selector */}
+            {isCoffeeCategory && (
+              <div className="coffee-selector-box">
+                <div className="coffee-step-section">
+                  <div className="coffee-step-header">
+                    <Coffee size={16} style={{ color: 'var(--accent)' }} />
+                    <span>{language === 'th' ? '1. เลือกเมนูเครื่องดื่ม' : '1. Select Drink Menu'}</span>
+                  </div>
+                  <div className="coffee-chips-grid">
+                    {COFFEE_MENUS.map((item) => {
+                      const isSelected = selectedCoffeeMenu === item.label;
+                      return (
+                        <button
+                          key={item.id}
+                          type="button"
+                          className={`coffee-chip-btn ${isSelected ? 'active' : ''}`}
+                          onClick={() => handleSelectCoffeeMenu(item.label)}
+                        >
+                          <span>{language === 'th' ? item.label : item.en}</span>
+                          {isSelected && <Check size={14} style={{ marginLeft: '2px' }} />}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {selectedCoffeeMenu && (
+                  <div className="coffee-step-section coffee-brand-step">
+                    <div className="coffee-step-header">
+                      <Store size={16} style={{ color: 'var(--primary-main)' }} />
+                      <span>
+                        {language === 'th'
+                          ? `2. เลือกแบรนด์สำหรับ "${selectedCoffeeMenu}"`
+                          : `2. Select Brand for "${selectedCoffeeMenu}"`}
+                      </span>
+                    </div>
+                    <div className="coffee-chips-grid">
+                      {COFFEE_BRANDS.map((brand) => {
+                        const isSelected = selectedCoffeeBrand === brand.label;
+                        return (
+                          <button
+                            key={brand.id}
+                            type="button"
+                            className={`coffee-brand-btn ${isSelected ? 'active' : ''}`}
+                            onClick={() => handleSelectCoffeeBrand(brand.label)}
+                          >
+                            <span>{brand.label}</span>
+                            {isSelected && <Check size={14} style={{ marginLeft: '2px' }} />}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
             <div className="form-group">
               <label className="form-label">{t('description')}</label>
-              <textarea className="form-control" rows="3" placeholder={isExpense ? t('descriptionPlaceholderExpense') : t('descriptionPlaceholderIncome')}></textarea>
+              <textarea 
+                className="form-control" 
+                rows="3" 
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                placeholder={isExpense ? t('descriptionPlaceholderExpense') : t('descriptionPlaceholderIncome')}
+              ></textarea>
             </div>
 
             <div className="form-actions-row">
@@ -473,7 +727,79 @@ const AddTransaction = () => {
           color: var(--text-muted);
         }
         .category-chip:hover { border-color: var(--accent); }
-        @media (max-width: 768px) { .form-grid { grid-template-columns: 1fr; } }
+        .coffee-selector-box {
+          margin: 0.75rem 0 1.25rem;
+          padding: 1rem 1.15rem;
+          border-radius: 12px;
+          background: var(--bg-card);
+          border: 1px solid var(--border);
+          display: flex;
+          flex-direction: column;
+          gap: 1rem;
+          animation: coffeeSlideIn 0.25s ease-out;
+        }
+        @keyframes coffeeSlideIn {
+          from { opacity: 0; transform: translateY(-6px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        .coffee-step-section {
+          display: flex;
+          flex-direction: column;
+          gap: 0.65rem;
+        }
+        .coffee-brand-step {
+          padding-top: 0.85rem;
+          border-top: 1px dashed var(--border);
+          animation: coffeeSlideIn 0.22s ease-out;
+        }
+        .coffee-step-header {
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+          font-size: 0.88rem;
+          font-weight: 600;
+          color: var(--text-main);
+        }
+        .coffee-chips-grid {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 0.5rem;
+        }
+        .coffee-chip-btn, .coffee-brand-btn {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          gap: 6px;
+          padding: 8px 14px;
+          min-height: 38px;
+          border-radius: 10px;
+          border: 1px solid var(--border);
+          background: var(--bg-card);
+          color: var(--text-main);
+          font-size: 0.85rem;
+          font-weight: 600;
+          font-family: inherit;
+          cursor: pointer;
+          transition: all 0.18s ease;
+          user-select: none;
+        }
+        .coffee-chip-btn:hover, .coffee-brand-btn:hover {
+          border-color: var(--accent);
+        }
+        .coffee-chip-btn.active, .coffee-brand-btn.active {
+          background: rgba(0, 168, 232, 0.1);
+          border-color: var(--accent);
+          color: var(--primary-dark);
+        }
+        @media (max-width: 768px) {
+          .form-grid { grid-template-columns: 1fr; }
+          .coffee-selector-box { padding: 0.85rem 0.9rem; }
+          .coffee-chip-btn, .coffee-brand-btn {
+            padding: 7px 12px;
+            font-size: 0.82rem;
+            min-height: 36px;
+          }
+        }
       `}</style>
     </Layout>
   );

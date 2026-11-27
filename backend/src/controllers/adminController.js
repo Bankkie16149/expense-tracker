@@ -1,7 +1,90 @@
 const { PrismaClient } = require('@prisma/client');
 const bcrypt = require('bcrypt');
+const fs = require('fs');
+const path = require('path');
 
 const prisma = new PrismaClient();
+const SETTINGS_FILE = path.join(__dirname, '../db/systemSettings.json');
+
+const ensureSettingsTable = async () => {
+  try {
+    await prisma.$executeRawUnsafe(`
+      CREATE TABLE IF NOT EXISTS "SystemSetting" (
+        "key" TEXT PRIMARY KEY,
+        "value" TEXT NOT NULL,
+        "updatedAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
+  } catch (e) {
+    // Fallback to file if DB table creation fails
+  }
+};
+
+const readLocalSettings = () => {
+  try {
+    if (fs.existsSync(SETTINGS_FILE)) {
+      return JSON.parse(fs.readFileSync(SETTINGS_FILE, 'utf8'));
+    }
+  } catch (e) {}
+  return { coPayEnabled: true, coPayWarningText: '' };
+};
+
+const writeLocalSettings = (data) => {
+  try {
+    fs.writeFileSync(SETTINGS_FILE, JSON.stringify(data, null, 2), 'utf8');
+  } catch (e) {}
+};
+
+exports.getSystemSettings = async (req, res) => {
+  try {
+    await ensureSettingsTable();
+    const rows = await prisma.$queryRawUnsafe(`SELECT "key", "value" FROM "SystemSetting" WHERE "key" IN ('coPayEnabled', 'coPayWarningText')`);
+    if (Array.isArray(rows) && rows.length > 0) {
+      const map = {};
+      rows.forEach(r => { map[r.key] = r.value; });
+      const settings = {
+        coPayEnabled: map.coPayEnabled !== undefined ? map.coPayEnabled === 'true' : true,
+        coPayWarningText: map.coPayWarningText || ''
+      };
+      writeLocalSettings(settings);
+      return res.json(settings);
+    }
+  } catch (error) {
+    console.error('DB settings read fallback:', error.message);
+  }
+  return res.json(readLocalSettings());
+};
+
+exports.updateSystemSettings = async (req, res) => {
+  try {
+    const coPayEnabled = Boolean(req.body.coPayEnabled);
+    const coPayWarningText = typeof req.body.coPayWarningText === 'string' ? req.body.coPayWarningText.trim() : '';
+
+    const settings = { coPayEnabled, coPayWarningText };
+    writeLocalSettings(settings);
+
+    try {
+      await ensureSettingsTable();
+      await prisma.$executeRawUnsafe(
+        `INSERT INTO "SystemSetting" ("key", "value", "updatedAt") VALUES ('coPayEnabled', $1, CURRENT_TIMESTAMP)
+         ON CONFLICT ("key") DO UPDATE SET "value" = EXCLUDED."value", "updatedAt" = CURRENT_TIMESTAMP`,
+        String(coPayEnabled)
+      );
+      await prisma.$executeRawUnsafe(
+        `INSERT INTO "SystemSetting" ("key", "value", "updatedAt") VALUES ('coPayWarningText', $1, CURRENT_TIMESTAMP)
+         ON CONFLICT ("key") DO UPDATE SET "value" = EXCLUDED."value", "updatedAt" = CURRENT_TIMESTAMP`,
+        coPayWarningText
+      );
+    } catch (dbErr) {
+      console.error('DB settings write fallback:', dbErr.message);
+    }
+
+    res.json({ message: 'System settings updated', ...settings });
+  } catch (error) {
+    console.error('Error updating system settings:', error);
+    res.status(500).json({ error: 'Failed to update system settings' });
+  }
+};
 
 // Get all users with their balance (sum of income - expense transactions)
 exports.getUsers = async (req, res) => {

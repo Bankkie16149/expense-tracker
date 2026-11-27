@@ -7,8 +7,13 @@ const categoryController = {
         orderBy: { name: 'asc' }
       });
       
+      const expenseList = categories.filter(c => c.type === 'expense').map(c => c.name);
+      if (!expenseList.includes('ค่ากาแฟ')) {
+        expenseList.push('ค่ากาแฟ');
+      }
+
       const formattedCategories = {
-        expense: categories.filter(c => c.type === 'expense').map(c => c.name),
+        expense: expenseList,
         income: categories.filter(c => c.type === 'income').map(c => c.name)
       };
 
